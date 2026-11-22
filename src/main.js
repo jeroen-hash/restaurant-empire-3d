@@ -613,7 +613,7 @@ async function start(){
     worldParts=buildWorld();bindControls();
     loadingText.textContent='Materialen en licht worden geladen…';
     const [lighting,character]=await Promise.all([loadLighting(),loadCharacter()]);
-    setStatus(character?'3D-wereld klaar · personage geladen':'Wereld klaar · personage kon niet laden');
+    if(character)setStatus('3D-wereld klaar · personage geladen');
     if(!character)toast('Personage niet geladen. Controleer de internetverbinding.');
     loading.classList.add('hidden');
     frame();
