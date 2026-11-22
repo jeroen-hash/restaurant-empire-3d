@@ -14,6 +14,8 @@ const cameraBtn=document.querySelector('#cameraBtn');
 
 let renderer,scene,camera,clock;
 let playerRoot,playerMixer,playerActions={},activeAction=null;
+let fallbackAvatar=null;
+const cafeDoorLeaves=[];
 let insideCafe=false,thirdPerson=true,doorOpen=false;
 let yaw=0,pitch=-0.12,moveX=0,moveY=0;
 let toastTimer=0;
@@ -100,18 +102,46 @@ function addTree(x,z){
 
 function addFacade(x,z,width,height,kind='residential'){
   const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
-  const shell=box(width,height,8,brickMat,0,height/2,0,g);shell.castShadow=true;
+  if(kind==='cafe'){
+    box(width,height,.55,brickMat,0,height/2,-3.72,g);
+    box(.55,height,7.45,brickMat,-width/2+.275,height/2,0,g);
+    box(.55,height,7.45,brickMat,width/2-.275,height/2,0,g);
+    box(width,height-4,.55,brickMat,0,(height+4)/2,3.72,g);
+  }else{
+    const shell=box(width,height,8,brickMat,0,height/2,0,g);shell.castShadow=true;
+  }
   box(width+.3,.32,8.3,stoneMat,0,.16,0,g);
   box(width+.5,.34,8.45,stoneMat,0,height-.17,0,g);
   box(width+.55,.2,8.5,darkMetal,0,height+.1,0,g);
   // Ground-floor shopfront: layered frames, glazing, recessed entrance.
   const shopH=3.5,shopY=2.05;
-  box(width-.65,shopH,.22,darkMetal,0,shopY,4.06,g);
-  box(width-.92,shopH-.28,.1,glass,0,shopY,4.2,g);
-  for(let i=0;i<5;i++){const xx=-width/2+.75+i*(width-1.5)/4;box(.09,shopH,.16,darkMetal,xx,shopY,4.29,g)}
-  box(width-.6,.16,.3,stoneMat,0,3.92,4.14,g);
-  box(width-.6,.18,.3,stoneMat,0,.22,4.14,g);
-  // Upper floors with stone-framed windows and small balconies.
+  if(kind==='cafe'){
+    for(const wx of [-4.45,4.45]){
+      box(4.0,2.85,.14,darkMetal,wx,2.0,4.12,g);
+      box(3.76,2.61,.06,warmGlass,wx,2.0,4.22,g);
+      box(.07,2.6,.1,darkMetal,wx,2.0,4.28,g);
+      box(4.08,.12,.22,stoneMat,wx,.48,4.18,g);
+      box(4.08,.12,.22,stoneMat,wx,3.52,4.18,g);
+    }
+    for(const wx of [-1.52,1.52])box(.16,3.18,.3,darkMetal,wx,1.95,4.23,g);
+    box(3.12,.18,.3,darkMetal,0,3.56,4.23,g);
+    for(const side of [-1,1]){
+      const hinge=new THREE.Group();hinge.position.set(side<0?-1.42:1.42,.12,4.34);g.add(hinge);
+      const leafX=side<0?.68:-.68;
+      box(1.36,2.58,.09,wood,leafX,1.29,0,hinge);
+      box(1.22,2.34,.035,warmGlass,leafX,1.29,.065,hinge);
+      cylinder(.025,.025,.34,brass,side<0?1.15:-1.15,1.25,.13,hinge,10);
+      cafeDoorLeaves.push({hinge,side,open:0});
+    }
+    box(3.0,.16,.5,stoneMat,0,.08,4.45,g);
+  }else{
+    box(width-.65,shopH,.22,darkMetal,0,shopY,4.06,g);
+    box(width-.92,shopH-.28,.1,glass,0,shopY,4.2,g);
+    for(let i=0;i<5;i++){const xx=-width/2+.75+i*(width-1.5)/4;box(.09,shopH,.16,darkMetal,xx,shopY,4.29,g)}
+    box(width-.6,.16,.3,stoneMat,0,3.92,4.14,g);
+    box(width-.6,.18,.3,stoneMat,0,.22,4.14,g);
+  }
+  // Upper floors with stone-framed windows and small balconies.  // Upper floors with stone-framed windows and small balconies.
   const floors=Math.max(1,Math.floor((height-4.5)/3.5));
   for(let f=0;f<floors;f++){
     const wy=5.5+f*3.25;
@@ -136,12 +166,7 @@ function addFacade(x,z,width,height,kind='residential'){
     box(7.8,.16,.18,stoneMat,0,3.5,5.65,g);
     const sign=createSign('ANIMO CAFE',6.8,1.05);sign.position.set(0,5.0,4.36);g.add(sign);
     for(const sx of [-2.7,0,2.7]){const l=new THREE.PointLight('#ffca8a',16,5,2);l.position.set(sx,3.4,4.9);g.add(l)}
-    // Double entrance with handles and a visible threshold.
-    box(1.65,2.65,.12,wood,-.95,1.62,4.34,g);
-    box(1.65,2.65,.12,wood,.95,1.62,4.34,g);
-    box(1.38,2.35,.05,warmGlass,-.95,1.67,4.42,g);
-    box(1.38,2.35,.05,warmGlass,.95,1.67,4.42,g);
-    for(const hx of [-.28, .28])cylinder(.035,.035,.48,brass,hx,1.55,4.53,g,10);
+    // Working hinged double doors are created in the shopfront above.
   }else{
     const sign=createSign(kind==='hotel'?'ANIMO HOTEL':'ANIMO',Math.min(width*.62,5),.62);sign.position.set(0,4.0,4.28);g.add(sign);
   }
@@ -217,7 +242,8 @@ function buildWorld(){
   // Front threshold and door trigger marker.
   const threshold=box(3.8,.12,.8,stoneMat,0,.05,4.8);threshold.castShadow=false;
   const doorLight=new THREE.PointLight('#ffd2a0',22,8,2);doorLight.position.set(0,3.3,4.5);scene.add(doorLight);
-  const player=new THREE.Group();player.position.set(0,0,9.8);scene.add(player);playerRoot=player;
+  const player=new THREE.Group();player.position.set(0,0,9.0);scene.add(player);playerRoot=player;
+  fallbackAvatar=createFallbackAvatar();player.add(fallbackAvatar);
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.46,32),new THREE.MeshBasicMaterial({color:'#0b1110',transparent:true,opacity:.32}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;player.add(shadow);
   // A small interaction marker sits above the cafe entrance.
   const marker=new THREE.Mesh(new THREE.TorusGeometry(.38,.045,8,32),new THREE.MeshBasicMaterial({color:'#d6b37a'}));marker.position.set(0,2.9,4.25);scene.add(marker);
@@ -234,17 +260,34 @@ async function loadLighting(){
     scene.environmentIntensity=.55;
   }catch(e){console.warn('HDRI niet beschikbaar; standaard omgevingslicht actief',e)}
 }
+function createFallbackAvatar(){
+  const g=new THREE.Group();
+  const shirt=makeMat('#263e4c',.82),pants=makeMat('#263039',.9),skin=makeMat('#c99572',.82),shoes=makeMat('#e4e1d9',.72);
+  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.29,.62,5,10),shirt);torso.position.y=1.05;torso.castShadow=true;g.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.19,18,14),skin);head.position.y=1.72;head.castShadow=true;g.add(head);
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(.195,16,10,0,Math.PI*2,0,Math.PI*.55),makeMat('#33271f',.95));hair.position.y=1.78;g.add(hair);
+  for(const side of [-1,1]){
+    const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.085,.48,4,8),shirt);arm.position.set(side*.38,1.12,0);arm.rotation.z=side*-.12;arm.castShadow=true;g.add(arm);
+    const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.57,4,8),pants);leg.position.set(side*.14,.43,0);leg.castShadow=true;g.add(leg);
+    const foot=new THREE.Mesh(new THREE.BoxGeometry(.19,.12,.34),shoes);foot.position.set(side*.14,.09,-.08);foot.castShadow=true;g.add(foot);
+  }
+  return g;
+}
 async function loadCharacter(){
   try{
     const gltf=await gltfLoader.loadAsync('https://models.vinish.dev/people/casual-man.glb');
-    const model=gltf.scene;model.scale.setScalar(1);model.rotation.y=Math.PI;
+    const model=gltf.scene;
+    const bounds=new THREE.Box3().setFromObject(model);
+    const height=Math.max(.01,bounds.max.y-bounds.min.y);
+    model.scale.setScalar(1.78/height);
+    model.position.y=-bounds.min.y*model.scale.y;
+    model.rotation.y=Math.PI;
     model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material)o.material.envMapIntensity=1.0}});
-    playerRoot.add(model);
+    playerRoot.add(model);fallbackAvatar.visible=false;
     playerMixer=new THREE.AnimationMixer(model);
     for(const clip of gltf.animations){const name=clip.name.toLowerCase();if(name.includes('idle'))playerActions.idle=playerMixer.clipAction(clip);if(name.includes('walk'))playerActions.walk=playerMixer.clipAction(clip)}
-    playAction('idle');
-    return true;
-  }catch(e){console.warn('Personage kon niet laden',e);return false}
+    playAction('idle');return true;
+  }catch(e){console.warn('Extern personage kon niet laden; reservepersonage actief',e);fallbackAvatar.visible=true;return false}
 }
 function playAction(name){const next=playerActions[name];if(!next||activeAction===next)return;if(activeAction)activeAction.fadeOut(.18);next.reset().fadeIn(.18).play();activeAction=next}
 function setMovement(x,y){moveX=x;moveY=y}
@@ -264,29 +307,38 @@ function updatePlayer(dt){
   if(insideCafe&&playerRoot.position.z>3.0){insideCafe=false;worldParts.cafeInside.visible=false;toast('Je staat weer buiten.');actionBtn.textContent='BINNEN';document.querySelector('#locationTitle').textContent='ANIMO CAFE';document.querySelector('#locationSubtitle').textContent='Een nieuwe start. Een eigen verhaal.'}
 }
 function updateCamera(dt){
-  const target=playerRoot.position.clone().add(new THREE.Vector3(0,1.45,0));
+  const target=playerRoot.position.clone().add(new THREE.Vector3(0,1.48,0));
   if(thirdPerson){
-    const offset=new THREE.Vector3(Math.sin(yaw)*4.4,THREE.MathUtils.clamp(2.1+pitch*4,.8,4.2),Math.cos(yaw)*4.4);
-    camera.position.lerp(target.clone().add(offset),1-Math.pow(.001,dt));
+    const radius=4.6,horizontal=Math.cos(pitch)*radius;
+    const offset=new THREE.Vector3(Math.sin(yaw)*horizontal,Math.sin(pitch)*radius+.35,Math.cos(yaw)*horizontal);
+    camera.position.lerp(target.clone().add(offset),1-Math.pow(.00008,dt));
     camera.lookAt(target);
   }else{
-    camera.position.lerp(target.clone().add(new THREE.Vector3(0,.18,0)),1-Math.pow(.001,dt));
+    camera.position.lerp(target.clone().add(new THREE.Vector3(0,.16,0)),1-Math.pow(.00008,dt));
     camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch;
   }
 }
+function setCafeDoors(open){for(const door of cafeDoorLeaves)door.open=open?1:0}
+function updateCafeDoors(dt){for(const door of cafeDoorLeaves){const target=door.open?door.side*Math.PI*.48:0;door.hinge.rotation.y=THREE.MathUtils.damp(door.hinge.rotation.y,target,8,dt)}}
 function enterCafe(){
-  const d=playerRoot.position.distanceTo(new THREE.Vector3(0,0,5.1));
-  if(!insideCafe&&d<5.1){
-    insideCafe=true;worldParts.cafeInside.visible=true;playerRoot.position.set(0,0,3.0);
-    actionBtn.textContent='NAAR BUITEN';
+  if(!insideCafe){
+    insideCafe=true;worldParts.cafeInside.visible=true;setCafeDoors(true);
+    playerRoot.position.set(0,0,3.0);actionBtn.textContent='NAAR BUITEN';
     document.querySelector('#locationTitle').textContent='ANIMO CAFE';
     document.querySelector('#locationSubtitle').textContent='Binnen begint jouw horeca-avontuur.';
     toast('Welkom in ANIMO CAFE.');
-  }else if(insideCafe){
-    insideCafe=false;worldParts.cafeInside.visible=false;playerRoot.position.set(0,0,5.2);actionBtn.textContent='BINNEN';toast('Je bent weer buiten.');
-  }else toast('Loop naar de ingang van ANIMO CAFE.');
+  }else{
+    insideCafe=false;worldParts.cafeInside.visible=false;setCafeDoors(false);
+    playerRoot.position.set(0,0,5.25);actionBtn.textContent='BINNEN';
+    document.querySelector('#locationTitle').textContent='ANIMO CAFE';
+    document.querySelector('#locationSubtitle').textContent='Een nieuwe start. Een eigen verhaal.';
+    toast('Je bent weer buiten.');
+  }
 }
-function handleAction(){if(!insideCafe&&playerRoot.position.distanceTo(new THREE.Vector3(0,0,5.1))>5.1){toast('Je moet dichter bij de ingang staan.');return}enterCafe()}
+function handleAction(){
+  if(!insideCafe&&Math.hypot(playerRoot.position.x,playerRoot.position.z-5.1)>6.2){toast('Loop naar de ingang onder het ANIMO CAFE-bord.');return}
+  enterCafe();
+}
 function onResize(){if(!renderer||!camera)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.6))}
 function bindControls(){
   addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE'||e.code==='Enter')handleAction();if(e.code==='KeyC')toggleCamera()});
@@ -294,9 +346,16 @@ function bindControls(){
   actionBtn.addEventListener('click',handleAction);
   cameraBtn.addEventListener('click',toggleCamera);
   let dragging=false,lastX=0,lastY=0;
-  canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){dragging=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)}});
-  canvas.addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-lastX)*.004;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-lastY)*.003,-.65,.5);lastX=e.clientX;lastY=e.clientY});
-  canvas.addEventListener('pointerup',()=>dragging=false);
+  canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){dragging=true;lastX=e.clientX;lastY=e.clientY;if(canvas.requestPointerLock)canvas.requestPointerLock()}});
+  addEventListener('pointerlockchange',()=>{dragging=document.pointerLockElement===canvas});
+  canvas.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const dx=document.pointerLockElement===canvas?e.movementX:e.clientX-lastX;
+    const dy=document.pointerLockElement===canvas?e.movementY:e.clientY-lastY;
+    yaw-=dx*.006;pitch=THREE.MathUtils.clamp(pitch-dy*.005,-.42,1.05);
+    lastX=e.clientX;lastY=e.clientY;
+  });
+  canvas.addEventListener('pointerup',()=>{if(document.pointerLockElement===canvas)document.exitPointerLock();dragging=false});
   const stickZone=document.querySelector('#stickZone'),stick=document.querySelector('#stick');
   let stickId=null,stickRect;
   stickZone.addEventListener('pointerdown',e=>{stickId=e.pointerId;stickZone.setPointerCapture(stickId);stickRect=stickZone.getBoundingClientRect();moveStick(e)});
@@ -305,8 +364,8 @@ function bindControls(){
   stickZone.addEventListener('pointerup',releaseStick);stickZone.addEventListener('pointercancel',releaseStick);
   function moveStick(e){const cx=stickRect.left+stickRect.width/2,cy=stickRect.top+stickRect.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const max=37,len=Math.hypot(dx,dy);if(len>max){dx=dx/len*max;dy=dy/len*max}stick.style.transform='translate(calc(-50% + '+dx+'px),calc(-50% + '+dy+'px))';setMovement(dx/max,-dy/max)}
   const lookZone=document.querySelector('#lookZone');let lookId=null,lx=0,ly=0;
-  lookZone.addEventListener('pointerdown',e=>{lookId=e.pointerId;lookZone.setPointerCapture(lookId);lx=e.clientX;ly=e.clientY});
-  lookZone.addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;yaw-=(e.clientX-lx)*.006;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-ly)*.004,-.7,.55);lx=e.clientX;ly=e.clientY});
+  lookZone.addEventListener('pointerdown',e=>{lookId=e.pointerId;lookZone.setPointerCapture(lookId);lx=e.clientX;ly=e.clientY;e.preventDefault()});
+  lookZone.addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;yaw-=(e.clientX-lx)*.009;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-ly)*.008,-.42,1.05);lx=e.clientX;ly=e.clientY;e.preventDefault()});
   const releaseLook=e=>{if(e.pointerId===lookId)lookId=null};lookZone.addEventListener('pointerup',releaseLook);lookZone.addEventListener('pointercancel',releaseLook);
   addEventListener('resize',onResize);
 }
@@ -322,6 +381,7 @@ function frame(){
   updatePlayer(dt);updateCamera(dt);
   if(playerMixer)playerMixer.update(dt);
   if(worldParts?.marker){worldParts.marker.rotation.z+=dt*.65;worldParts.marker.position.y=2.9+Math.sin(performance.now()*.0018)*.12}
+  updateCafeDoors(dt);
   renderer.render(scene,camera);
 }
 function stickZoneActive(){return document.querySelector('#stick').style.transform.includes('px')}
@@ -330,8 +390,8 @@ async function start(){
     worldParts=buildWorld();bindControls();
     loadingText.textContent='Materialen en licht worden geladen…';
     const [lighting,character]=await Promise.all([loadLighting(),loadCharacter()]);
-    setStatus(character?'3D-wereld klaar · personage geladen':'3D-wereld klaar · personage niet geladen');
-    if(!character)toast('De wereld is klaar, maar het personage kon niet laden.');
+    setStatus(character?'3D-wereld klaar · personage geladen':'3D-wereld klaar · reservepersonage actief');
+    if(!character)toast('Reservepersonage actief.');
     loading.classList.add('hidden');
     frame();
   }catch(e){
