@@ -8,7 +8,8 @@
   <title>RESTAURANT EMPIRE 3D</title>
   <link rel="stylesheet" href="./src/style.css" />
   <script type="importmap">
-    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js" } }
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/" } }
   </script>
 </head>
 <body>
@@ -22,9 +23,9 @@
     <section class="welcome-panel" id="welcome">
       <p class="eyebrow">EERSTE SPEELBARE PROEFVERSIE</p>
       <h1>Jouw verhaal<br/><em>begint hier.</em></h1>
-      <p>Welkom in de ANIMO-stad. Verken de straat en ontdek de wereld waarin je jouw horeca-imperium opbouwt.</p>
+      <p>Je start recht tegenover ANIMO CAFE. Verken de straat, stap binnen en begin aan jouw horeca-imperium.</p>
       <button id="start" class="primary">WERELD BETREDEN <span>→</span></button>
-      <small>Technische prototype · voortgang wordt lokaal bewaard</small>
+      <small>Eerste assettest · voortgang wordt lokaal bewaard</small>
     </section>
     <div class="location-tag"><span class="live-dot"></span><span>ANIMO-STAD</span><b>·</b><span id="location">CENTRUM</span></div>
     <div class="controls-hint" id="controls-hint">LINKS BEWEGEN <b>·</b> RECHTS KIJKEN</div>
@@ -40,6 +41,6 @@
     <div class="toast" id="toast"></div>
     <noscript>Schakel JavaScript in om RESTAURANT EMPIRE 3D te spelen.</noscript>
   </main>
-  <script type="module" src="./src/main.js?v=doorway-fix-3"></script>
+  <script type="module" src="./src/main.js?v=cc0-assets-1"></script>
 </body>
 </html>
