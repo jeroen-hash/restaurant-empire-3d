@@ -197,7 +197,12 @@ for(const side of [-1,1]){
 const playerShadow=new THREE.Mesh(new THREE.CircleGeometry(.48,24),new THREE.MeshBasicMaterial({color:0x17211d,transparent:true,opacity:.25}));playerShadow.rotation.x=-Math.PI/2;playerShadow.position.y=.02;player.add(playerShadow);
 
 const state={started:false,paused:false,firstPerson:false,insideCafe:false,outsidePosition:null,elapsed:0,day:1,moveX:0,moveY:0,yaw:0,dragging:false,lastX:0,lastY:0};
-let characterMixer=null,characterIdle=null,characterWalk=null;
+let characterMixer=null,characterIdle=null,characterWalk=null,currentCharacterAction=null;
+function setCharacterMotion(moving){
+ const next=moving?(characterWalk||characterIdle):characterIdle;
+ if(!next||next===currentCharacterAction)return;
+ currentCharacterAction?.fadeOut(.18);next.reset().fadeIn(.18).play();currentCharacterAction=next;
+}
 const assetLoader=new GLTFLoader();
 assetLoader.load('https://tevy.dev/models/casual-walker/v1/lod1.glb',gltf=>{
  const model=gltf.scene;model.position.set(0,0,0);model.scale.setScalar(1.0);
@@ -206,7 +211,7 @@ assetLoader.load('https://tevy.dev/models/casual-walker/v1/lod1.glb',gltf=>{
  characterMixer=new THREE.AnimationMixer(model);
  const idleClip=gltf.animations.find(a=>a.name.toLowerCase().includes('idle'))||gltf.animations[0];
  const walkClip=gltf.animations.find(a=>a.name.toLowerCase().includes('walk'));
- if(idleClip){characterIdle=characterMixer.clipAction(idleClip);characterIdle.play();}
+ if(idleClip){characterIdle=characterMixer.clipAction(idleClip);characterIdle.play();currentCharacterAction=characterIdle;}
  if(walkClip){characterWalk=characterMixer.clipAction(walkClip);characterWalk.setLoop(THREE.LoopRepeat);}
  player.rotation.y=Math.PI;
 },undefined,err=>console.warn('ANIMO character model could not load',err));
@@ -279,7 +284,7 @@ function updateClock(dt){state.elapsed+=dt;const total=8*60+state.elapsed/60;con
 function updatePlayer(dt){
  if(!state.started||state.paused)return;
  const moving=Math.hypot(state.moveX,state.moveY)>.08;
- if(characterMixer){if(moving&&characterWalk){characterIdle?.fadeOut(.18);characterWalk.reset().fadeIn(.18).play();}else if(!moving&&characterIdle){characterWalk?.fadeOut(.18);characterIdle.reset().fadeIn(.18).play();}}
+ if(characterMixer)setCharacterMotion(moving);
  if(!moving)return;
  const forward=new THREE.Vector3(Math.sin(state.yaw),0,-Math.cos(state.yaw));
  const right=new THREE.Vector3(-forward.z,0,forward.x);
