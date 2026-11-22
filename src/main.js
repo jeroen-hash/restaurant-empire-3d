@@ -349,7 +349,7 @@ function buildWorld(){
   const threshold=box(3.8,.12,.8,stoneMat,0,.05,4.8);threshold.castShadow=false;
   const doorLight=new THREE.PointLight('#ffd2a0',22,8,2);doorLight.position.set(0,3.3,4.5);scene.add(doorLight);
   const player=new THREE.Group();player.position.set(0,0,9.0);scene.add(player);playerRoot=player;
-  fallbackAvatar=createFallbackAvatar();fallbackAvatar.visible=false;player.add(fallbackAvatar);
+  fallbackAvatar=createFallbackAvatar();fallbackAvatar.visible=true;player.add(fallbackAvatar);
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.46,32),new THREE.MeshBasicMaterial({color:'#0b1110',transparent:true,opacity:.32}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;player.add(shadow);
   // A small interaction marker sits above the cafe entrance.
   const marker=new THREE.Mesh(new THREE.TorusGeometry(.38,.045,8,32),new THREE.MeshBasicMaterial({color:'#d6b37a'}));marker.position.set(0,2.9,4.25);scene.add(marker);
@@ -426,8 +426,8 @@ async function loadCharacter(){
       if(!walkClip)walkClip=idleClip;
       if(idleClip)playerActions.idle=playerMixer.clipAction(idleClip);
       if(walkClip)playerActions.walk=playerMixer.clipAction(walkClip);
-      if(!playerActions.idle)throw new Error('Het 3D-model bevat geen bruikbare animatie');
-      playAction('idle');
+      if(playerActions.idle)playAction('idle');
+      setStatus('Personage geladen');
       return true;
     }catch(e){
       lastError=e;
@@ -435,7 +435,8 @@ async function loadCharacter(){
       if(attempt<3)await new Promise(resolve=>setTimeout(resolve,700*attempt));
     }
   }
-  fallbackAvatar.visible=false;
+  fallbackAvatar.visible=true;
+  setStatus('Personage actief · reserveweergave');
   console.error('Het echte 3D-personage kon niet worden geladen:',lastError);
   return false;
 }
@@ -528,7 +529,7 @@ function bindControls(){
     const locked=document.pointerLockElement===canvas;
     const dx=locked?e.movementX:e.clientX-lastX;
     const dy=locked?e.movementY:e.clientY-lastY;
-    yaw-=dx*.006;pitch=THREE.MathUtils.clamp(pitch-dy*.005,-.42,1.05);
+    yaw-=dx*.006;pitch=THREE.MathUtils.clamp(pitch+dy*.005,-.42,1.05);
     lastX=e.clientX;lastY=e.clientY;
   });
   addEventListener('pointerup',e=>{
@@ -582,7 +583,7 @@ function bindControls(){
     if(e.pointerId!==lookId)return;
     e.preventDefault();
     const dx=e.clientX-lx,dy=e.clientY-ly;
-    yaw-=dx*.008;pitch=THREE.MathUtils.clamp(pitch-dy*.007,-.42,1.05);
+    yaw-=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.007,-.42,1.05);
     lx=e.clientX;ly=e.clientY;
   });
   const releaseLook=e=>{if(lookId===null||(e&&e.pointerId!==undefined&&e.pointerId!==lookId))return;lookId=null};
