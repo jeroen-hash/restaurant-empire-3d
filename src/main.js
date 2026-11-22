@@ -380,7 +380,7 @@ function createFallbackAvatar(){
   return g;
 }
 async function loadCharacter(){
-  const modelUrl='./lod0.glb';
+  const modelUrl=new URL('../lod0.glb',import.meta.url).href;
   let lastError=null;
   // Retry transient mobile-network and CDN failures. Never silently show the
   // crude placeholder as if it were the intended player character.
@@ -436,7 +436,8 @@ async function loadCharacter(){
     }
   }
   fallbackAvatar.visible=false;
-  setStatus('Echt 3D-personage kon niet laden · controleer verbinding');
+  const reason=lastError?.message||String(lastError||'Onbekende fout');
+  setStatus('Personage niet geladen: '+reason);
   console.error('Het echte 3D-personage kon niet worden geladen:',lastError);
   return false;
 }
