@@ -41,7 +41,9 @@ const lineMat=new THREE.MeshStandardMaterial({color:0xd8d0ae,roughness:.9});
 for(let z=-68;z<=68;z+=9) box(.12,.015,3.8,lineMat,0,.075,z);
 for(let x=-68;x<=68;x+=9) box(3.8,.015,.12,lineMat,x,.075,0);
 
+const buildingColliders=[];
 function makeBuilding(x,z,w,d,h,body,shopName,accent=0xb9935d){
+ buildingColliders.push({x,z,halfW:w/2+.25,halfD:d/2+.25});
  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
  const bodyMat=new THREE.MeshStandardMaterial({color:body,roughness:.9});
  box(w,h,d,bodyMat,0,h/2,0,g);
@@ -90,6 +92,81 @@ makeBuilding(30,23,12,11,20,0xc4b29d,'',0x9a7658);
 makeBuilding(-48,0,11,13,19,0xc9b9a5,'',0x8b9b88);
 makeBuilding(48,0,11,13,16,0xb57e69,'',0x9a7658);
 
+// Eerste toegankelijke locatie: ANIMO CAFE. Dit is een aparte, volledig ingerichte testinterieurzone.
+const cafeInterior = new THREE.Group();
+cafeInterior.position.set(1000,0,1000);
+scene.add(cafeInterior);
+const interiorMats = {
+ floor:new THREE.MeshStandardMaterial({color:0x827b6d,roughness:.82}),
+ wall:new THREE.MeshStandardMaterial({color:0xd8cfbd,roughness:.92}),
+ dark:new THREE.MeshStandardMaterial({color:0x26332f,roughness:.72}),
+ wood:new THREE.MeshStandardMaterial({color:0x76533b,roughness:.62}),
+ brass:new THREE.MeshStandardMaterial({color:0xb18a50,metalness:.55,roughness:.34}),
+ tile:new THREE.MeshStandardMaterial({color:0xaaa394,roughness:.8}),
+ steel:new THREE.MeshStandardMaterial({color:0x9da8a5,metalness:.72,roughness:.3}),
+ glass:new THREE.MeshStandardMaterial({color:0x42616a,metalness:.2,roughness:.2}),
+ seat:new THREE.MeshStandardMaterial({color:0x526b60,roughness:.9})
+};
+function interiorBox(w,h,d,mat,x,y,z){return box(w,h,d,mat,x,y,z,cafeInterior)}
+// Tiled floor and architectural shell
+interiorBox(16,.18,12,interiorMats.floor,0,0,0);
+interiorBox(16,4.2,.28,interiorMats.wall,0,2.1,-6);
+interiorBox(.28,4.2,12,interiorMats.wall,-8,2.1,0);
+interiorBox(.28,4.2,12,interiorMats.wall,8,2.1,0);
+// Front wall leaves a proper doorway in the middle
+interiorBox(6.4,4.2,.28,interiorMats.wall,-4.8,2.1,6);
+interiorBox(6.4,4.2,.28,interiorMats.wall,4.8,2.1,6);
+interiorBox(3.2,1.15,.28,interiorMats.wall,0,3.62,6);
+interiorBox(15.7,.16,.3,interiorMats.dark,0,4.25,0);
+interiorBox(15.7,.12,.3,interiorMats.brass,0,.18,0);
+// Wall panelling and warm ceiling lights
+for(let x=-6.8;x<=6.8;x+=1.7){interiorBox(.045,1.05,.035,interiorMats.brass,x,.75,-5.82)}
+for(const x of [-5,-1.7,1.7,5]){
+ const lamp=new THREE.PointLight(0xffd9a3,34,9,2);lamp.position.set(x,3.8,-1);cafeInterior.add(lamp);
+ const shade=new THREE.Mesh(new THREE.CylinderGeometry(.28,.38,.16,16),interiorMats.brass);shade.position.set(x,3.72,-1);cafeInterior.add(shade);
+}
+// Reception / bar and back display
+interiorBox(5.2,1.12,1.05,interiorMats.wood,-4.9,.68,-3.8);
+interiorBox(5.35,.12,1.15,interiorMats.brass,-4.9,1.28,-3.8);
+interiorBox(5.2,2.1,.18,interiorMats.dark,-4.9,2.25,-5.55);
+for(let x=-7;x<=-3;x+=1)interiorBox(.7,.5,.08,interiorMats.wood,x,2.25,-5.42);
+// Kitchen pass and stainless work line
+interiorBox(5.8,1.05,.9,interiorMats.steel,3.7,.58,-4.1);
+interiorBox(5.9,.1,1,interiorMats.dark,3.7,1.14,-4.1);
+for(let x=1.2;x<=6.2;x+=1.65){
+ interiorBox(1.25,.9,.72,interiorMats.steel,x,.55,-5.25);
+ interiorBox(1.18,.08,.65,interiorMats.dark,x,1.04,-5.25);
+}
+interiorBox(5.8,.12,1.15,interiorMats.steel,3.7,2.35,-5.3);
+for(let x=1.3;x<=6.1;x+=1.6){interiorBox(.08,1.1,.08,interiorMats.brass,x,1.72,-5.3)}
+// Cooking range, ovens and extractor
+interiorBox(2.2,.88,.9,interiorMats.dark,5.1,.5,-2.8);
+for(let x=4.35;x<=5.85;x+=.75){
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.22,.045,8,20),interiorMats.brass);ring.rotation.x=Math.PI/2;ring.position.set(x,.98,-2.8);cafeInterior.add(ring);
+}
+interiorBox(2.5,.16,1.25,interiorMats.steel,5.1,2.25,-2.8);
+interiorBox(2.2,.18,.16,interiorMats.dark,5.1,3.15,-2.8);
+// Dining tables and chairs
+function cafeTable(x,z){
+ interiorBox(1.55,.12,.95,interiorMats.wood,x,1.05,z);
+ for(const dx of [-.62,.62])for(const dz of [-.34,.34])interiorBox(.09,1,.09,interiorMats.dark,x+dx,.5,z+dz);
+ for(const dx of [-1.05,1.05]){
+  interiorBox(.78,.12,.78,interiorMats.seat,x+dx,.62,z);
+  interiorBox(.78,.85,.12,interiorMats.seat,x+dx,1.05,z-.32);
+  for(const dz of [-.25,.25])interiorBox(.07,.55,.07,interiorMats.dark,x+dx+(.32*Math.sign(dx)),.3,z+dz);
+ }
+}
+cafeTable(-3,1.8);cafeTable(1,1.8);cafeTable(-3,4.1);cafeTable(1,4.1);
+// Decorative framed ANIMO wall sign
+const signCanvas=document.createElement('canvas');signCanvas.width=768;signCanvas.height=256;
+const signCtx=signCanvas.getContext('2d');signCtx.fillStyle='#24342f';signCtx.fillRect(0,0,768,256);
+signCtx.strokeStyle='#b9935d';signCtx.lineWidth=7;signCtx.strokeRect(14,14,740,228);
+signCtx.fillStyle='#e5d2a9';signCtx.textAlign='center';signCtx.font='bold 86px Georgia';signCtx.fillText('ANIMO CAFE',384,145);
+const signTexture=new THREE.CanvasTexture(signCanvas);signTexture.colorSpace=THREE.SRGBColorSpace;
+const cafeSign=new THREE.Mesh(new THREE.PlaneGeometry(4.8,1.6),new THREE.MeshBasicMaterial({map:signTexture}));
+cafeSign.position.set(0,3.05,-5.78);cafeInterior.add(cafeSign);
+
+
 function tree(x,z,scale=1){
  const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);
  const t=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,2.4,8),mats.trunk);t.position.y=1.2;t.castShadow=true;g.add(t);
@@ -118,7 +195,7 @@ for(const side of [-1,1]){
 }
 const playerShadow=new THREE.Mesh(new THREE.CircleGeometry(.48,24),new THREE.MeshBasicMaterial({color:0x17211d,transparent:true,opacity:.25}));playerShadow.rotation.x=-Math.PI/2;playerShadow.position.y=.02;player.add(playerShadow);
 
-const state={started:false,paused:false,firstPerson:false,elapsed:0,day:1,moveX:0,moveY:0,yaw:0,dragging:false,lastX:0,lastY:0};
+const state={started:false,paused:false,firstPerson:false,insideCafe:false,outsidePosition:null,elapsed:0,day:1,moveX:0,moveY:0,yaw:0,dragging:false,lastX:0,lastY:0};
 const clockEl=document.querySelector('#clock'),dayEl=document.querySelector('#day-label'),pauseOverlay=document.querySelector('#pause-overlay'),welcome=document.querySelector('#welcome');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function toast(msg){const t=document.querySelector('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),1900)}
@@ -131,7 +208,32 @@ document.querySelector('#resume').addEventListener('click',()=>setPaused(false))
 document.querySelector('#save').addEventListener('click',saveGame);
 document.querySelector('#start').addEventListener('click',()=>{state.started=true;welcome.classList.add('dismissed');toast('Welkom in ANIMO-stad');});
 document.querySelector('#camera').addEventListener('click',()=>{state.firstPerson=!state.firstPerson;document.querySelector('#camera-label').textContent=state.firstPerson?'EERSTE PERSOON':'DERDE PERSOON';toast(state.firstPerson?'Eerste persoon':'Derde persoon')});
-document.querySelector('#interact').addEventListener('click',()=>toast('Je verkent ANIMO-stad. Meer interacties volgen in de volgende bouwfase.'));
+function interact(){
+ if(!state.started||state.paused)return;
+ if(state.insideCafe){
+  state.insideCafe=false;
+  player.position.copy(state.outsidePosition||new THREE.Vector3(14,0,21));
+  state.yaw=0;
+  document.querySelector('#location').textContent='CENTRUM';
+  document.querySelector('#action-label').textContent='BINNEN';
+  toast('Je staat weer buiten bij ANIMO CAFE.');
+  return;
+ }
+ const doorX=14,doorZ=20.6;
+ if(Math.hypot(player.position.x-doorX,player.position.z-doorZ)<3.2){
+  state.outsidePosition=player.position.clone();
+  state.insideCafe=true;
+  player.position.set(1000,0,1004.3);
+  state.yaw=0;
+  document.querySelector('#location').textContent='ANIMO CAFE';
+  document.querySelector('#action-label').textContent='NAAR BUITEN';
+  toast('Welkom binnen bij ANIMO CAFE.');
+  return;
+ }
+ const near=buildingColliders.some(b=>Math.abs(player.position.x-b.x)<b.halfW+2&&Math.abs(player.position.z-(b.z+b.halfD))<3);
+ toast(near?'Ga naar de ingang en tik op ACTIE.':'Er is nog geen gebouw in de buurt dat je kunt betreden.');
+}
+document.querySelector('#interact').addEventListener('click',interact);
 
 // Mobile joystick
 const zone=document.querySelector('#joystick-zone'),knob=document.querySelector('#joystick-knob');let joyId=null;
@@ -150,7 +252,19 @@ addEventListener('keyup',e=>{if(['w','s','ArrowUp','ArrowDown'].includes(e.key))
 
 const v3=new THREE.Vector3(),look=new THREE.Vector3();
 function updateClock(dt){state.elapsed+=dt;const total=8*60+state.elapsed/60;const mins=Math.floor(total)%1440;state.day=Math.floor((8*60+state.elapsed/60)/1440)+1;const hh=String(Math.floor(mins/60)).padStart(2,'0'),mm=String(mins%60).padStart(2,'0');clockEl.textContent=hh+':'+mm;dayEl.textContent='DAG '+state.day;const daylight=clamp((Math.sin((mins/1440)*Math.PI*2-Math.PI/2)+1)/2,.08,1);sun.intensity=1.0+2.4*daylight;hemi.intensity=.75+1.35*daylight;const sky=new THREE.Color().lerpColors(new THREE.Color(0x172b3b),new THREE.Color(0xa9c0c2),daylight);scene.background=sky;scene.fog.color.copy(sky);}
-function updatePlayer(dt){if(!state.started||state.paused)return;const moving=Math.hypot(state.moveX,state.moveY)>.08;if(moving){const forward=new THREE.Vector3(Math.sin(state.yaw),0,-Math.cos(state.yaw));const right=new THREE.Vector3(-forward.z,0,forward.x);v3.copy(forward).multiplyScalar(-state.moveY).addScaledVector(right,state.moveX).normalize();player.position.addScaledVector(v3,dt*3.4);player.position.x=clamp(player.position.x,-62,62);player.position.z=clamp(player.position.z,-62,62);player.rotation.y=Math.atan2(v3.x,v3.z);} }
+function updatePlayer(dt){if(!state.started||state.paused)return;const moving=Math.hypot(state.moveX,state.moveY)>.08;if(moving){const forward=new THREE.Vector3(Math.sin(state.yaw),0,-Math.cos(state.yaw));const right=new THREE.Vector3(-forward.z,0,forward.x);v3.copy(forward).multiplyScalar(-state.moveY).addScaledVector(right,state.moveX).normalize();const step=v3.clone().multiplyScalar(dt*3.4);
+  const nextX=player.position.x+step.x,nextZ=player.position.z+step.z;
+  const blocked=(x,z)=>buildingColliders.some(b=>Math.abs(x-b.x)<b.halfW+.42&&Math.abs(z-b.z)<b.halfD+.42);
+  if(state.insideCafe){
+   player.position.x=clamp(nextX,991.7,1007.7);
+   player.position.z=clamp(nextZ,994.2,1005.15);
+  }else{
+   if(!blocked(nextX,player.position.z))player.position.x=nextX;
+   if(!blocked(player.position.x,nextZ))player.position.z=nextZ;
+   player.position.x=clamp(player.position.x,-62,62);
+   player.position.z=clamp(player.position.z,-62,62);
+  }
+  player.rotation.y=Math.atan2(v3.x,v3.z);} }
 function updateCamera(dt){const targetY=state.firstPerson?1.72:1.45;const forward=new THREE.Vector3(Math.sin(state.yaw),0,-Math.cos(state.yaw));if(state.firstPerson){camera.position.set(player.position.x,player.position.y+targetY,player.position.z);look.copy(camera.position).add(forward.multiplyScalar(8));}else{const offset=new THREE.Vector3(0,4.1,7.2).applyAxisAngle(new THREE.Vector3(0,1,0),state.yaw);const desired=player.position.clone().add(offset);camera.position.lerp(desired,1-Math.pow(.001,dt));look.set(player.position.x,player.position.y+1.35,player.position.z);look.add(forward.multiplyScalar(1.5));}camera.lookAt(look);}
 let last=performance.now();
 function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;if(state.started&&!state.paused){updateClock(dt);updatePlayer(dt);}updateCamera(dt);renderer.render(scene,camera);}
