@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 const canvas=document.querySelector('#world');
@@ -26,6 +27,7 @@ const tempV=new THREE.Vector3();
 const colliders=[];
 const textureLoader=new THREE.TextureLoader();
 const gltfLoader=new GLTFLoader();
+gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
 function setStatus(text){statusEl.textContent=text}
 function toast(text){toastEl.textContent=text;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2200)}
