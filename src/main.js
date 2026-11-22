@@ -17,7 +17,7 @@ let playerRoot,playerMixer,playerActions={},activeAction=null;
 let fallbackAvatar=null;
 const cafeDoorLeaves=[];
 let insideCafe=false,thirdPerson=true,doorOpen=false;
-let yaw=0,pitch=0.22,moveX=0,moveY=0;
+let yaw=0,pitch=0.22,moveX=0,moveY=0,joystickActive=false;
 let toastTimer=0;
 const keys={};
 const raycaster=new THREE.Raycaster();
@@ -341,32 +341,103 @@ function handleAction(){
 }
 function onResize(){if(!renderer||!camera)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.6))}
 function bindControls(){
-  addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE'||e.code==='Enter')handleAction();if(e.code==='KeyC')toggleCamera()});
-  addEventListener('keyup',e=>keys[e.code]=false);
+  // Clear all held inputs whenever the page loses focus. This prevents a stuck
+  // joystick/key state after iOS Safari interrupts touch input.
+  function clearInputs(){
+    for(const code of Object.keys(keys))keys[code]=false;
+    moveX=0;moveY=0;joystickActive=false;
+    const stick=document.querySelector('#stick');
+    if(stick)stick.style.transform='translate(-50%,-50%)';
+  }
+  addEventListener('keydown',e=>{
+    keys[e.code]=true;
+    if(e.code==='KeyE'||e.code==='Enter')handleAction();
+    if(e.code==='KeyC')toggleCamera();
+  });
+  addEventListener('keyup',e=>{keys[e.code]=false});
+  addEventListener('blur',clearInputs);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInputs()});
   actionBtn.addEventListener('click',handleAction);
   cameraBtn.addEventListener('click',toggleCamera);
-  let dragging=false,lastX=0,lastY=0;
-  canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){dragging=true;lastX=e.clientX;lastY=e.clientY;if(canvas.requestPointerLock)canvas.requestPointerLock()}});
-  addEventListener('pointerlockchange',()=>{dragging=document.pointerLockElement===canvas});
-  canvas.addEventListener('pointermove',e=>{
-    if(!dragging)return;
-    const dx=document.pointerLockElement===canvas?e.movementX:e.clientX-lastX;
-    const dy=document.pointerLockElement===canvas?e.movementY:e.clientY-lastY;
+
+  // Desktop mouse-look. Pointer lock is optional; dragging still works without it.
+  let mouseDragging=false,lastX=0,lastY=0;
+  canvas.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='mouse')return;
+    mouseDragging=true;lastX=e.clientX;lastY=e.clientY;
+    if(canvas.setPointerCapture){try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
+    if(canvas.requestPointerLock){try{canvas.requestPointerLock()}catch(_){}}
+  });
+  document.addEventListener('pointerlockchange',()=>{
+    if(document.pointerLockElement===canvas)mouseDragging=true;
+    else if(!document.querySelector('#lookZone').matches(':active'))mouseDragging=false;
+  });
+  addEventListener('pointermove',e=>{
+    if(!mouseDragging||e.pointerType!=='mouse')return;
+    const locked=document.pointerLockElement===canvas;
+    const dx=locked?e.movementX:e.clientX-lastX;
+    const dy=locked?e.movementY:e.clientY-lastY;
     yaw-=dx*.006;pitch=THREE.MathUtils.clamp(pitch-dy*.005,-.42,1.05);
     lastX=e.clientX;lastY=e.clientY;
   });
-  canvas.addEventListener('pointerup',()=>{if(document.pointerLockElement===canvas)document.exitPointerLock();dragging=false});
-  const stickZone=document.querySelector('#stickZone'),stick=document.querySelector('#stick');
-  let stickId=null,stickRect;
-  stickZone.addEventListener('pointerdown',e=>{stickId=e.pointerId;stickZone.setPointerCapture(stickId);stickRect=stickZone.getBoundingClientRect();moveStick(e)});
-  stickZone.addEventListener('pointermove',e=>{if(e.pointerId===stickId)moveStick(e)});
-  const releaseStick=e=>{if(e.pointerId!==stickId)return;stickId=null;setMovement(0,0);stick.style.transform='translate(-50%,-50%)'};
-  stickZone.addEventListener('pointerup',releaseStick);stickZone.addEventListener('pointercancel',releaseStick);
-  function moveStick(e){const cx=stickRect.left+stickRect.width/2,cy=stickRect.top+stickRect.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const max=37,len=Math.hypot(dx,dy);if(len>max){dx=dx/len*max;dy=dy/len*max}stick.style.transform='translate(calc(-50% + '+dx+'px),calc(-50% + '+dy+'px))';setMovement(dx/max,-dy/max)}
-  const lookZone=document.querySelector('#lookZone');let lookId=null,lx=0,ly=0;
-  lookZone.addEventListener('pointerdown',e=>{lookId=e.pointerId;lookZone.setPointerCapture(lookId);lx=e.clientX;ly=e.clientY;e.preventDefault()});
-  lookZone.addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;yaw-=(e.clientX-lx)*.009;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-ly)*.008,-.42,1.05);lx=e.clientX;ly=e.clientY;e.preventDefault()});
-  const releaseLook=e=>{if(e.pointerId===lookId)lookId=null};lookZone.addEventListener('pointerup',releaseLook);lookZone.addEventListener('pointercancel',releaseLook);
+  addEventListener('pointerup',e=>{
+    if(e.pointerType==='mouse'){
+      mouseDragging=false;
+      if(document.pointerLockElement===canvas&&document.exitPointerLock)document.exitPointerLock();
+    }
+  });
+  addEventListener('pointercancel',e=>{if(e.pointerType==='mouse')mouseDragging=false});
+
+  // Mobile movement joystick with explicit active state (not CSS-transform detection).
+  const stickZone=document.querySelector('#stickZone');
+  const stick=document.querySelector('#stick');
+  let stickId=null,stickRect=null;
+  function moveStick(e){
+    if(!stickRect)return;
+    const cx=stickRect.left+stickRect.width/2,cy=stickRect.top+stickRect.height/2;
+    let dx=e.clientX-cx,dy=e.clientY-cy;
+    const max=43,len=Math.hypot(dx,dy);
+    if(len>max){dx=dx/len*max;dy=dy/len*max}
+    stick.style.transform='translate(calc(-50% + '+dx+'px),calc(-50% + '+dy+'px))';
+    setMovement(dx/max,-dy/max);
+  }
+  function releaseStick(e){
+    if(stickId===null||(e&&e.pointerId!==undefined&&e.pointerId!==stickId))return;
+    stickId=null;stickRect=null;joystickActive=false;setMovement(0,0);
+    stick.style.transform='translate(-50%,-50%)';
+  }
+  stickZone.addEventListener('pointerdown',e=>{
+    if(stickId!==null)return;
+    e.preventDefault();stickId=e.pointerId;joystickActive=true;
+    stickRect=stickZone.getBoundingClientRect();
+    try{stickZone.setPointerCapture(e.pointerId)}catch(_){}
+    moveStick(e);
+  });
+  stickZone.addEventListener('pointermove',e=>{if(e.pointerId===stickId){e.preventDefault();moveStick(e)}});
+  stickZone.addEventListener('pointerup',releaseStick);
+  stickZone.addEventListener('pointercancel',releaseStick);
+  stickZone.addEventListener('lostpointercapture',releaseStick);
+
+  // Independent right-side camera zone. Capturing the pointer avoids losing
+  // camera movement when a finger drifts outside the zone during a swipe.
+  const lookZone=document.querySelector('#lookZone');
+  let lookId=null,lx=0,ly=0;
+  lookZone.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'||lookId!==null)return;
+    e.preventDefault();lookId=e.pointerId;lx=e.clientX;ly=e.clientY;
+    try{lookZone.setPointerCapture(e.pointerId)}catch(_){}
+  });
+  lookZone.addEventListener('pointermove',e=>{
+    if(e.pointerId!==lookId)return;
+    e.preventDefault();
+    const dx=e.clientX-lx,dy=e.clientY-ly;
+    yaw-=dx*.008;pitch=THREE.MathUtils.clamp(pitch-dy*.007,-.42,1.05);
+    lx=e.clientX;ly=e.clientY;
+  });
+  const releaseLook=e=>{if(lookId===null||(e&&e.pointerId!==undefined&&e.pointerId!==lookId))return;lookId=null};
+  lookZone.addEventListener('pointerup',releaseLook);
+  lookZone.addEventListener('pointercancel',releaseLook);
+  lookZone.addEventListener('lostpointercapture',releaseLook);
   addEventListener('resize',onResize);
 }
 function toggleCamera(){thirdPerson=!thirdPerson;cameraBtn.textContent=thirdPerson?'3P':'1P';toast(thirdPerson?'Derde persoon':'Eerste persoon')}
@@ -377,14 +448,13 @@ function frame(){
   const keyX=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
   const keyY=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   if(keyX||keyY){moveX=keyX;moveY=keyY}
-  else if(!stickZoneActive()) {moveX=0;moveY=0}
+  else if(!joystickActive) {moveX=0;moveY=0}
   updatePlayer(dt);updateCamera(dt);
   if(playerMixer)playerMixer.update(dt);
   if(worldParts?.marker){worldParts.marker.rotation.z+=dt*.65;worldParts.marker.position.y=2.9+Math.sin(performance.now()*.0018)*.12}
   updateCafeDoors(dt);
   renderer.render(scene,camera);
 }
-function stickZoneActive(){return document.querySelector('#stick').style.transform.includes('px')}
 async function start(){
   try{
     worldParts=buildWorld();bindControls();
