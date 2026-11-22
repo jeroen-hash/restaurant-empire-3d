@@ -380,7 +380,7 @@ function createFallbackAvatar(){
   return g;
 }
 async function loadCharacter(){
-  const modelUrl='https://tevy.dev/models/casual-walker/v1/lod0.glb';
+  const modelUrl='./lod0.glb';
   let lastError=null;
   // Retry transient mobile-network and CDN failures. Never silently show the
   // crude placeholder as if it were the intended player character.
