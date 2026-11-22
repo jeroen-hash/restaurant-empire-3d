@@ -193,31 +193,31 @@ function buildWorld(){
   // Street surface, curbs and Belgian-style stone sidewalks.
   box(60,.25,64,asphalt,0,-.18,0);
   for(const side of [-1,1]){
-    box(60,.42,4.2,paving,0,-.02,side*12.1);
-    box(60,.22,.28,stoneMat,0,.08,side*9.85);
-    for(let i=0;i<40;i++){const seam=box(.025,.015,3.9,makeMat('#6e6a62'),-29+i*1.48,.205,side*12.1);seam.castShadow=false}
+    box(60,.42,3.6,paving,0,-.02,side*7.3);
+    box(60,.22,.28,stoneMat,0,.08,side*5.45);
+    for(let i=0;i<40;i++){const seam=box(.025,.015,3.35,makeMat('#6e6a62'),-29+i*1.48,.205,side*7.3);seam.castShadow=false}
   }
   // Facades form a compact, believable European street frontage.
-  addFacade(-14,-14,12,13,'residential');
-  addFacade(0,-14,14,14,'cafe');
-  addFacade(15,-14,13,16,'hotel');
-  addFacade(-14,14,12,12,'residential');
-  addFacade(14,14,12,13,'residential');
+  addFacade(-14,0,12,13,'residential');
+  addFacade(0,0,14,14,'cafe');
+  addFacade(15,0,13,16,'hotel');
+  addFacade(-14,-25,12,12,'residential');
+  addFacade(14,-25,12,13,'residential');
   // Roof silhouettes and chimney stacks.
-  for(const x of [-14,0,15]){box(12,1.2,8,makeMat('#343b3a'),x,15.2,-14);for(let i=0;i<3;i++)box(.8,1.5,.8,makeMat('#8b8274'),x-4+i*4,16.4,-14)}
-  addLamp(-8,6);addLamp(9,6);addLamp(-25,-2);addLamp(25,-2);
+  for(const x of [-14,0,15]){box(12,1.2,8,makeMat('#343b3a'),x,15.2,0);for(let i=0;i<3;i++)box(.8,1.5,.8,makeMat('#8b8274'),x-4+i*4,16.4,0)}
+  addLamp(-8,8);addLamp(9,8);addLamp(-25,-2);addLamp(25,-2);
   addTree(-24,-8);addTree(24,-8);addTree(-24,8);addTree(24,8);
   // Road markings and tactile crossings.
   const lineMat=makeMat('#d8d2c5',.82);
-  for(let i=0;i<8;i++)box(1.1,.025,.16,lineMat,-4.2+i*1.2, -.035,4.5);
-  const cafeInside=makeInterior();
+  for(let i=0;i<8;i++)box(1.1,.025,.16,lineMat,-4.2+i*1.2, -.035,12.5);
+  const cafeInside=makeInterior();cafeInside.position.z=3.9;
   // Front threshold and door trigger marker.
-  const threshold=box(3.8,.12,.8,stoneMat,0,.05,-8.9);threshold.castShadow=false;
-  const doorLight=new THREE.PointLight('#ffd2a0',22,8,2);doorLight.position.set(0,3.3,-8.2);scene.add(doorLight);
-  const player=new THREE.Group();player.position.set(0,0,5.6);scene.add(player);playerRoot=player;
+  const threshold=box(3.8,.12,.8,stoneMat,0,.05,4.8);threshold.castShadow=false;
+  const doorLight=new THREE.PointLight('#ffd2a0',22,8,2);doorLight.position.set(0,3.3,4.5);scene.add(doorLight);
+  const player=new THREE.Group();player.position.set(0,0,9.8);scene.add(player);playerRoot=player;
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.46,32),new THREE.MeshBasicMaterial({color:'#0b1110',transparent:true,opacity:.32}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;player.add(shadow);
   // A small interaction marker sits above the cafe entrance.
-  const marker=new THREE.Mesh(new THREE.TorusGeometry(.38,.045,8,32),new THREE.MeshBasicMaterial({color:'#d6b37a'}));marker.position.set(0,2.9,-8.25);scene.add(marker);
+  const marker=new THREE.Mesh(new THREE.TorusGeometry(.38,.045,8,32),new THREE.MeshBasicMaterial({color:'#d6b37a'}));marker.position.set(0,2.9,4.25);scene.add(marker);
   marker.userData.float=true;
   return {cafeInside,marker};
 }
@@ -251,14 +251,14 @@ function updatePlayer(dt){
   const v=forward.clone().multiplyScalar(moveY).addScaledVector(right,moveX);
   const moving=v.lengthSq()>.001;
   if(moving){v.normalize().multiplyScalar(3.1*dt);playerRoot.position.add(v);playerRoot.rotation.y=Math.atan2(v.x,v.z)+Math.PI}
-  const limit=insideCafe?{x:5.3,zMin:-9.4,zMax:-.1}:{x:27,zMin:-2.5,zMax:28};
+  const limit=insideCafe?{x:5.3,zMin:-6.0,zMax:3.15}:{x:27,zMin:5.1,zMax:28};
   playerRoot.position.x=THREE.MathUtils.clamp(playerRoot.position.x,-limit.x,limit.x);
   playerRoot.position.z=THREE.MathUtils.clamp(playerRoot.position.z,limit.zMin,limit.zMax);
   // Keep the avatar outside the facade unless the cafe has been entered.
-  if(!insideCafe&&playerRoot.position.z<-2.1)playerRoot.position.z=-2.1;
-  if(insideCafe&&playerRoot.position.z>-1.0)playerRoot.position.z=-1.0;
+  if(!insideCafe&&playerRoot.position.z<5.1)playerRoot.position.z=5.1;
+  if(insideCafe&&playerRoot.position.z>3.15)playerRoot.position.z=3.15;
   playAction(moving?'walk':'idle');
-  if(insideCafe&&playerRoot.position.z>-1.1){insideCafe=false;worldParts.cafeInside.visible=false;toast('Je staat weer buiten.');actionBtn.textContent='BINNEN';document.querySelector('#locationTitle').textContent='ANIMO CAFE';document.querySelector('#locationSubtitle').textContent='Een nieuwe start. Een eigen verhaal.'}
+  if(insideCafe&&playerRoot.position.z>3.0){insideCafe=false;worldParts.cafeInside.visible=false;toast('Je staat weer buiten.');actionBtn.textContent='BINNEN';document.querySelector('#locationTitle').textContent='ANIMO CAFE';document.querySelector('#locationSubtitle').textContent='Een nieuwe start. Een eigen verhaal.'}
 }
 function updateCamera(dt){
   const target=playerRoot.position.clone().add(new THREE.Vector3(0,1.45,0));
@@ -272,18 +272,18 @@ function updateCamera(dt){
   }
 }
 function enterCafe(){
-  const d=playerRoot.position.distanceTo(new THREE.Vector3(0,0,-2.1));
+  const d=playerRoot.position.distanceTo(new THREE.Vector3(0,0,5.1));
   if(!insideCafe&&d<5.1){
-    insideCafe=true;worldParts.cafeInside.visible=true;playerRoot.position.set(0,0,-1.3);
+    insideCafe=true;worldParts.cafeInside.visible=true;playerRoot.position.set(0,0,3.0);
     actionBtn.textContent='NAAR BUITEN';
     document.querySelector('#locationTitle').textContent='ANIMO CAFE';
     document.querySelector('#locationSubtitle').textContent='Binnen begint jouw horeca-avontuur.';
     toast('Welkom in ANIMO CAFE.');
   }else if(insideCafe){
-    insideCafe=false;worldParts.cafeInside.visible=false;playerRoot.position.set(0,0,-1.9);actionBtn.textContent='BINNEN';toast('Je bent weer buiten.');
+    insideCafe=false;worldParts.cafeInside.visible=false;playerRoot.position.set(0,0,5.2);actionBtn.textContent='BINNEN';toast('Je bent weer buiten.');
   }else toast('Loop naar de ingang van ANIMO CAFE.');
 }
-function handleAction(){if(!insideCafe&&playerRoot.position.distanceTo(new THREE.Vector3(0,0,-2.1))>5.1){toast('Je moet dichter bij de ingang staan.');return}enterCafe()}
+function handleAction(){if(!insideCafe&&playerRoot.position.distanceTo(new THREE.Vector3(0,0,5.1))>5.1){toast('Je moet dichter bij de ingang staan.');return}enterCafe()}
 function onResize(){if(!renderer||!camera)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.6))}
 function bindControls(){
   addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE'||e.code==='Enter')handleAction();if(e.code==='KeyC')toggleCamera()});
@@ -324,7 +324,7 @@ function frame(){
 function stickZoneActive(){return document.querySelector('#stick').style.transform.includes('px')}
 async function start(){
   try{
-    buildWorld();bindControls();
+    worldParts=buildWorld();bindControls();
     loadingText.textContent='Materialen en licht worden geladen…';
     const [lighting,character]=await Promise.all([loadLighting(),loadCharacter()]);
     setStatus(character?'3D-wereld klaar · personage geladen':'3D-wereld klaar · personage niet geladen');
@@ -336,5 +336,4 @@ async function start(){
   }
 }
 document.querySelector('#retryBtn').addEventListener('click',()=>location.reload());
-worldParts=buildWorld();
 start();
