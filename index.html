@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#101514">
+  <meta name="description" content="RESTAURANT EMPIRE 3D — visual foundation build">
+  <title>RESTAURANT EMPIRE 3D</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://dl.polyhaven.org">
+  <link rel="preconnect" href="https://tevy.dev">
+  <link rel="stylesheet" href="./src/style.css?v=rebuild-01">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main id="game">
+    <canvas id="world" aria-label="3D spelwereld"></canvas>
+    <div class="vignette"></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">A</span><div><strong>ANIMO</strong><small>RESTAURANT EMPIRE 3D</small></div></div>
+      <div class="build-tag">VISUAL FOUNDATION <span>01</span></div>
+    </header>
+    <section class="scene-label">
+      <div class="eyebrow">BELGIË · HORECADISTRICT</div>
+      <h1 id="locationTitle">ANIMO CAFE</h1>
+      <p id="locationSubtitle">Een nieuwe start. Een eigen verhaal.</p>
+    </section>
+    <div class="status">
+      <span class="status-dot"></span><span id="loadStatus">3D-omgeving wordt opgebouwd</span>
+    </div>
+    <div class="controls-help" id="controlsHelp">
+      <span>LINKS</span> bewegen <i></i><span>RECHTS</span> kijken <i></i><span>ACTIE</span> binnen
+    </div>
+    <div class="mobile-controls" id="mobileControls">
+      <div class="stick-zone" id="stickZone"><div class="stick" id="stick"></div></div>
+      <div class="look-zone" id="lookZone"></div>
+      <button class="action-btn" id="actionBtn">BINNEN</button>
+      <button class="camera-btn" id="cameraBtn" aria-label="Wissel camera">3P</button>
+    </div>
+    <div class="desktop-hint">WASD / PIJLEN · MOUSE LOOK · E = ACTIE · C = CAMERA</div>
+    <div class="toast" id="toast" role="status"></div>
+    <div class="loading" id="loading">
+      <div class="loading-card">
+        <div class="loading-brand">ANIMO</div>
+        <div class="loading-line"><span></span></div>
+        <p id="loadingText">De wereld wordt voorbereid…</p>
+      </div>
+    </div>
+    <div class="error-panel" id="errorPanel" hidden>
+      <strong>De 3D-omgeving kon niet volledig laden.</strong>
+      <p id="errorText">Controleer je internetverbinding en laad opnieuw.</p>
+      <button id="retryBtn">OPNIEUW PROBEREN</button>
+    </div>
+  </main>
+  <script type="module" src="./src/main.js?v=rebuild-01"></script>
+</body>
+</html>
