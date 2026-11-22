@@ -43,7 +43,10 @@ const glass=new THREE.MeshPhysicalMaterial({color:'#b7d0d0',metalness:.08,roughn
 const warmGlass=new THREE.MeshPhysicalMaterial({color:'#d8c29b',metalness:.04,roughness:.16,transmission:.18,transparent:true,opacity:.86,emissive:'#7b4b20',emissiveIntensity:.18});
 const plaster=makeMat('#d9d0c1',.9);
 const wood=makeMat('#493326',.5);
-const asphaltColor=loadTexture('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_diff_1k.jpg',18,18);\nconst asphaltNormal=textureLoader.load('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_nor_gl_1k.jpg');\nconst asphaltRough=textureLoader.load('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_rough_1k.jpg');\nconst asphalt=new THREE.MeshStandardMaterial({map:asphaltColor,normalMap:asphaltNormal,roughnessMap:asphaltRough,roughness:.96});
+const asphaltColor=loadTexture('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_diff_1k.jpg',18,18);
+const asphaltNormal=textureLoader.load('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_nor_gl_1k.jpg');
+const asphaltRough=textureLoader.load('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_rough_1k.jpg');
+const asphalt=new THREE.MeshStandardMaterial({map:asphaltColor,normalMap:asphaltNormal,roughnessMap:asphaltRough,roughness:.96});
 const paving=makeMat('#8d8980',.95);
 const gold=makeMat('#c5a16c',.36,.45);
 
