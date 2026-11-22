@@ -344,7 +344,7 @@ function buildWorld(){
   // Road markings and tactile crossings.
   const lineMat=makeMat('#d8d2c5',.82);
   for(let i=0;i<8;i++)box(1.1,.025,.16,lineMat,-4.2+i*1.2, -.035,12.5);
-  const cafeInside=makeInterior();cafeInside.position.z=3.9;
+  const cafeInside=makeInterior();cafeInside.position.z=3.42;cafeInside.scale.z=.727;
   // Front threshold and door trigger marker.
   const threshold=box(3.8,.12,.8,stoneMat,0,.05,4.8);threshold.castShadow=false;
   const doorLight=new THREE.PointLight('#ffd2a0',22,8,2);doorLight.position.set(0,3.3,4.5);scene.add(doorLight);
@@ -460,7 +460,7 @@ function updatePlayer(dt){
 function updateCamera(dt){
   const target=playerRoot.position.clone().add(new THREE.Vector3(0,1.48,0));
   if(thirdPerson){
-    const radius=4.6,horizontal=Math.cos(pitch)*radius;
+    const radius=insideCafe?3.2:4.6,horizontal=Math.cos(pitch)*radius;
     const offset=new THREE.Vector3(Math.sin(yaw)*horizontal,Math.sin(pitch)*radius+.35,Math.cos(yaw)*horizontal);
     camera.position.lerp(target.clone().add(offset),1-Math.pow(.00008,dt));
     camera.lookAt(target);
@@ -474,7 +474,7 @@ function updateCafeDoors(dt){for(const door of cafeDoorLeaves){const target=door
 function enterCafe(){
   if(!insideCafe){
     insideCafe=true;worldParts.cafeInside.visible=true;setCafeDoors(true);
-    playerRoot.position.set(0,0,1.65);actionBtn.textContent='NAAR BUITEN';
+    playerRoot.position.set(0,0,.45);actionBtn.textContent='NAAR BUITEN';
     document.querySelector('#locationTitle').textContent='ANIMO CAFE';
     document.querySelector('#locationSubtitle').textContent='Binnen begint jouw horeca-avontuur.';
     toast('Welkom in ANIMO CAFE.');
