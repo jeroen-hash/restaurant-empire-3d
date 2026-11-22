@@ -349,7 +349,7 @@ function buildWorld(){
   const threshold=box(3.8,.12,.8,stoneMat,0,.05,4.8);threshold.castShadow=false;
   const doorLight=new THREE.PointLight('#ffd2a0',22,8,2);doorLight.position.set(0,3.3,4.5);scene.add(doorLight);
   const player=new THREE.Group();player.position.set(0,0,9.0);scene.add(player);playerRoot=player;
-  fallbackAvatar=createFallbackAvatar();fallbackAvatar.visible=true;player.add(fallbackAvatar);
+  fallbackAvatar=createFallbackAvatar();fallbackAvatar.visible=false;player.add(fallbackAvatar);
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.46,32),new THREE.MeshBasicMaterial({color:'#0b1110',transparent:true,opacity:.32}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;player.add(shadow);
   // A small interaction marker sits above the cafe entrance.
   const marker=new THREE.Mesh(new THREE.TorusGeometry(.38,.045,8,32),new THREE.MeshBasicMaterial({color:'#d6b37a'}));marker.position.set(0,2.9,4.25);scene.add(marker);
@@ -380,7 +380,7 @@ function createFallbackAvatar(){
   return g;
 }
 async function loadCharacter(){
-  const modelUrl='https://models.vinish.dev/people/casual-man.glb';
+  const modelUrl='https://tevy.dev/models/casual-walker/v1/lod0.glb';
   let lastError=null;
   // Retry transient mobile-network and CDN failures. Never silently show the
   // crude placeholder as if it were the intended player character.
@@ -435,8 +435,8 @@ async function loadCharacter(){
       if(attempt<3)await new Promise(resolve=>setTimeout(resolve,700*attempt));
     }
   }
-  fallbackAvatar.visible=true;
-  setStatus('Personage actief · reserveweergave');
+  fallbackAvatar.visible=false;
+  setStatus('Echt 3D-personage kon niet laden · controleer verbinding');
   console.error('Het echte 3D-personage kon niet worden geladen:',lastError);
   return false;
 }
