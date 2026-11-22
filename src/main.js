@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 const canvas=document.querySelector('#world');
@@ -317,6 +318,12 @@ function buildWorld(){
   scene=new THREE.Scene();scene.background=new THREE.Color('#9aa7a8');scene.fog=new THREE.FogExp2('#aab2af',.009);
   camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,180);
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
+  // The supplied character model uses KTX2-compressed textures. Configure the
+  // matching Three.js Basis transcoder before GLTFLoader starts loading it.
+  const ktx2Loader=new KTX2Loader();
+  ktx2Loader.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/basis/');
+  ktx2Loader.detectSupport(renderer);
+  gltfLoader.setKTX2Loader(ktx2Loader);
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
