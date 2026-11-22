@@ -17,7 +17,7 @@ let playerRoot,playerMixer,playerActions={},activeAction=null;
 let fallbackAvatar=null;
 const cafeDoorLeaves=[];
 let insideCafe=false,thirdPerson=true,doorOpen=false;
-let yaw=0,pitch=-0.12,moveX=0,moveY=0;
+let yaw=0,pitch=0.22,moveX=0,moveY=0;
 let toastTimer=0;
 const keys={};
 const raycaster=new THREE.Raycaster();
