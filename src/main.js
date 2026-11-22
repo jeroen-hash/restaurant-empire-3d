@@ -212,14 +212,14 @@ function interact(){
  if(!state.started||state.paused)return;
  if(state.insideCafe){
   state.insideCafe=false;
-  player.position.copy(state.outsidePosition||new THREE.Vector3(14,0,21));
+  player.position.copy(state.outsidePosition||new THREE.Vector3(17.6,0,21));
   state.yaw=0;
   document.querySelector('#location').textContent='CENTRUM';
   document.querySelector('#action-label').textContent='BINNEN';
   toast('Je staat weer buiten bij ANIMO CAFE.');
   return;
  }
- const doorX=14,doorZ=20.6;
+ const doorX=17.6,doorZ=20.6;
  if(Math.hypot(player.position.x-doorX,player.position.z-doorZ)<3.2){
   state.outsidePosition=player.position.clone();
   state.insideCafe=true;
