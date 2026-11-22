@@ -6,6 +6,8 @@ Een realistische 3D-horeca- en levenssimulator. Dit project is onafhankelijk van
 
 Deze eerste technische proefversie bevat:
 - Een 3D-straatbeeld met ANIMO-bedrijven.
+- Botsingen met gebouwen zodat je niet meer door gevels loopt.
+- Een eerste betreedbare locatie: ANIMO CAFE, met eetzaal en professionele keuken.
 - Een bestuurbaar 3D-personage.
 - Derde- en eerste-persoonsperspectief.
 - Touchjoystick voor mobiele toestellen.
@@ -28,4 +30,4 @@ Open de gepubliceerde webversie in Safari zodra GitHub Pages is ingeschakeld. De
 
 ## Belangrijke scope-opmerking
 
-Dit is een technische basis/prototype, geen afgewerkte game. De huidige gebouwen, personage en materialen zijn procedurele placeholder-assets om besturing, camera, tijd en rendering te testen. Ze voldoen nog niet aan de afgesproken uiteindelijke fotorealistische kwaliteitsnorm. Hoogwaardige 3D-modellen, animaties, audio, uitgebreide stad, hotelschool en gameplay worden in afzonderlijke bouwstappen toegevoegd.
+Dit is een technische basis/prototype, geen afgewerkte game. De huidige gebouwen, personage en materialen zijn nog deels procedurele placeholder-assets. De eerste toegankelijke ANIMO CAFE-interieurzone is een verticale gameplaytest, nog geen definitieve fotorealistische asset. Ze voldoen nog niet aan de afgesproken uiteindelijke fotorealistische kwaliteitsnorm. Hoogwaardige 3D-modellen, animaties, audio, uitgebreide stad, hotelschool en gameplay worden in afzonderlijke bouwstappen toegevoegd.
