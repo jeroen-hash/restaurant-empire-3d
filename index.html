@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#101b1b" />
+  <meta name="description" content="RESTAURANT EMPIRE 3D — eerste speelbare technische prototype." />
+  <title>RESTAURANT EMPIRE 3D</title>
+  <link rel="stylesheet" href="./src/style.css" />
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <main id="game">
+    <div id="scene" aria-label="3D spelwereld"></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">A</span><span>ANIMO <b>EMPIRE</b><small>RESTAURANT EMPIRE 3D</small></span></div>
+      <div class="clock"><span id="day-label">DAG 1</span><strong id="clock">08:00</strong><span id="weather">HELDER</span></div>
+      <button id="pause" class="icon-button" aria-label="Pauzeren">Ⅱ</button>
+    </header>
+    <section class="welcome-panel" id="welcome">
+      <p class="eyebrow">EERSTE SPEELBARE PROEFVERSIE</p>
+      <h1>Jouw verhaal<br/><em>begint hier.</em></h1>
+      <p>Welkom in de ANIMO-stad. Verken de straat en ontdek de wereld waarin je jouw horeca-imperium opbouwt.</p>
+      <button id="start" class="primary">WERELD BETREDEN <span>→</span></button>
+      <small>Technische prototype · voortgang wordt lokaal bewaard</small>
+    </section>
+    <div class="location-tag"><span class="live-dot"></span><span>ANIMO-STAD</span><b>·</b><span id="location">CENTRUM</span></div>
+    <div class="controls-hint" id="controls-hint">LINKS BEWEGEN <b>·</b> RECHTS KIJKEN</div>
+    <div class="joystick-zone" id="joystick-zone"><div class="joystick-base"><div class="joystick-knob" id="joystick-knob"></div></div></div>
+    <div class="right-controls">
+      <button id="camera" class="round-control"><span>◉</span><small>CAMERA</small></button>
+      <button id="interact" class="round-control action"><span>＋</span><small id="action-label">ACTIE</small></button>
+    </div>
+    <div class="bottom-status"><span id="camera-label">DERDE PERSOON</span><span class="separator"></span><span>LEVEL 1</span><span class="separator"></span><span>€ 0</span></div>
+    <div class="pause-overlay hidden" id="pause-overlay">
+      <div class="pause-card"><p class="eyebrow">WERELD GEPARKEERD</p><h2>Even pauze.</h2><p>De tijd, personages en wereld staan stil.</p><button id="resume" class="primary">VERDER SPELEN</button><button id="save" class="secondary">NU OPSLAAN</button><p id="save-status" class="save-status"></p></div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <noscript>Schakel JavaScript in om RESTAURANT EMPIRE 3D te spelen.</noscript>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
