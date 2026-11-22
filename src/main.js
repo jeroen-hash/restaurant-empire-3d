@@ -43,7 +43,7 @@ for(let x=-68;x<=68;x+=9) box(3.8,.015,.12,lineMat,x,.075,0);
 
 const buildingColliders=[];
 function makeBuilding(x,z,w,d,h,body,shopName,accent=0xb9935d){
- buildingColliders.push({x,z,halfW:w/2+.25,halfD:d/2+.25});
+ buildingColliders.push({x,z,halfW:w/2+.25,halfD:d/2+.25,doorX:shopName==='ANIMO CAFE'?x+w*.36:null,doorZ:shopName==='ANIMO CAFE'?z+d/2+.02:null});
  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
  const bodyMat=new THREE.MeshStandardMaterial({color:body,roughness:.9});
  box(w,h,d,bodyMat,0,h/2,0,g);
@@ -208,30 +208,29 @@ document.querySelector('#resume').addEventListener('click',()=>setPaused(false))
 document.querySelector('#save').addEventListener('click',saveGame);
 document.querySelector('#start').addEventListener('click',()=>{state.started=true;welcome.classList.add('dismissed');toast('Welkom in ANIMO-stad');});
 document.querySelector('#camera').addEventListener('click',()=>{state.firstPerson=!state.firstPerson;document.querySelector('#camera-label').textContent=state.firstPerson?'EERSTE PERSOON':'DERDE PERSOON';toast(state.firstPerson?'Eerste persoon':'Derde persoon')});
+function enterCafe(){
+ state.outsidePosition=new THREE.Vector3(17.6,0,21.1);
+ state.insideCafe=true;
+ player.position.set(1000,0,1004.35);
+ state.yaw=0;
+ document.querySelector('#location').textContent='ANIMO CAFE';
+ document.querySelector('#action-label').textContent='NAAR BUITEN';
+ toast('Welkom binnen bij ANIMO CAFE.');
+}
+function exitCafe(){
+ state.insideCafe=false;
+ player.position.set(17.6,0,21.1);
+ state.yaw=0;
+ document.querySelector('#location').textContent='CENTRUM';
+ document.querySelector('#action-label').textContent='BINNEN';
+ toast('Je staat weer buiten bij ANIMO CAFE.');
+}
 function interact(){
  if(!state.started||state.paused)return;
- if(state.insideCafe){
-  state.insideCafe=false;
-  player.position.copy(state.outsidePosition||new THREE.Vector3(17.6,0,21));
-  state.yaw=0;
-  document.querySelector('#location').textContent='CENTRUM';
-  document.querySelector('#action-label').textContent='BINNEN';
-  toast('Je staat weer buiten bij ANIMO CAFE.');
-  return;
- }
+ if(state.insideCafe){exitCafe();return;}
  const doorX=17.6,doorZ=20.6;
- if(Math.hypot(player.position.x-doorX,player.position.z-doorZ)<3.2){
-  state.outsidePosition=player.position.clone();
-  state.insideCafe=true;
-  player.position.set(1000,0,1004.3);
-  state.yaw=0;
-  document.querySelector('#location').textContent='ANIMO CAFE';
-  document.querySelector('#action-label').textContent='NAAR BUITEN';
-  toast('Welkom binnen bij ANIMO CAFE.');
-  return;
- }
- const near=buildingColliders.some(b=>Math.abs(player.position.x-b.x)<b.halfW+2&&Math.abs(player.position.z-(b.z+b.halfD))<3);
- toast(near?'Ga naar de ingang en tik op ACTIE.':'Er is nog geen gebouw in de buurt dat je kunt betreden.');
+ if(Math.hypot(player.position.x-doorX,player.position.z-doorZ)<4.5){enterCafe();return;}
+ toast('Loop naar de glazen voordeur van ANIMO CAFE om binnen te gaan.');
 }
 document.querySelector('#interact').addEventListener('click',interact);
 
@@ -252,19 +251,35 @@ addEventListener('keyup',e=>{if(['w','s','ArrowUp','ArrowDown'].includes(e.key))
 
 const v3=new THREE.Vector3(),look=new THREE.Vector3();
 function updateClock(dt){state.elapsed+=dt;const total=8*60+state.elapsed/60;const mins=Math.floor(total)%1440;state.day=Math.floor((8*60+state.elapsed/60)/1440)+1;const hh=String(Math.floor(mins/60)).padStart(2,'0'),mm=String(mins%60).padStart(2,'0');clockEl.textContent=hh+':'+mm;dayEl.textContent='DAG '+state.day;const daylight=clamp((Math.sin((mins/1440)*Math.PI*2-Math.PI/2)+1)/2,.08,1);sun.intensity=1.0+2.4*daylight;hemi.intensity=.75+1.35*daylight;const sky=new THREE.Color().lerpColors(new THREE.Color(0x172b3b),new THREE.Color(0xa9c0c2),daylight);scene.background=sky;scene.fog.color.copy(sky);}
-function updatePlayer(dt){if(!state.started||state.paused)return;const moving=Math.hypot(state.moveX,state.moveY)>.08;if(moving){const forward=new THREE.Vector3(Math.sin(state.yaw),0,-Math.cos(state.yaw));const right=new THREE.Vector3(-forward.z,0,forward.x);v3.copy(forward).multiplyScalar(-state.moveY).addScaledVector(right,state.moveX).normalize();const step=v3.clone().multiplyScalar(dt*3.4);
-  const nextX=player.position.x+step.x,nextZ=player.position.z+step.z;
-  const blocked=(x,z)=>buildingColliders.some(b=>Math.abs(x-b.x)<b.halfW+.42&&Math.abs(z-b.z)<b.halfD+.42);
-  if(state.insideCafe){
-   player.position.x=clamp(nextX,991.7,1007.7);
-   player.position.z=clamp(nextZ,994.2,1005.15);
-  }else{
-   if(!blocked(nextX,player.position.z))player.position.x=nextX;
-   if(!blocked(player.position.x,nextZ))player.position.z=nextZ;
-   player.position.x=clamp(player.position.x,-62,62);
-   player.position.z=clamp(player.position.z,-62,62);
-  }
-  player.rotation.y=Math.atan2(v3.x,v3.z);} }
+function updatePlayer(dt){
+ if(!state.started||state.paused)return;
+ const moving=Math.hypot(state.moveX,state.moveY)>.08;
+ if(!moving)return;
+ const forward=new THREE.Vector3(Math.sin(state.yaw),0,-Math.cos(state.yaw));
+ const right=new THREE.Vector3(-forward.z,0,forward.x);
+ v3.copy(forward).multiplyScalar(-state.moveY).addScaledVector(right,state.moveX).normalize();
+ const step=v3.clone().multiplyScalar(dt*3.4);
+ const nextX=player.position.x+step.x,nextZ=player.position.z+step.z;
+ player.rotation.y=Math.atan2(v3.x,v3.z);
+ if(state.insideCafe){
+  const inDoorLane=player.position.x>998.45&&player.position.x<1001.55&&nextZ>=1005.55;
+  if(inDoorLane){exitCafe();return;}
+  player.position.x=clamp(nextX,992.45,1007.55);
+  player.position.z=clamp(nextZ,994.35,1005.55);
+  return;
+ }
+ const cafe=buildingColliders.find(b=>b.doorX!==null&&b.doorX!==undefined);
+ const crossingCafeDoor=!!cafe&&Math.abs(nextX-cafe.doorX)<.95&&player.position.z>cafe.doorZ+.05&&nextZ<=cafe.doorZ+.05;
+ if(crossingCafeDoor){enterCafe();return;}
+ const blocked=(x,z)=>buildingColliders.some(b=>{
+  const inCafeDoor= b.doorX!==null&&Math.abs(x-b.doorX)<.95&&z>b.doorZ-.5&&z<b.doorZ+1.2;
+  return !inCafeDoor&&Math.abs(x-b.x)<b.halfW+.42&&Math.abs(z-b.z)<b.halfD+.42;
+ });
+ if(!blocked(nextX,player.position.z))player.position.x=nextX;
+ if(!blocked(player.position.x,nextZ))player.position.z=nextZ;
+ player.position.x=clamp(player.position.x,-62,62);
+ player.position.z=clamp(player.position.z,-62,62);
+}
 function updateCamera(dt){const targetY=state.firstPerson?1.72:1.45;const forward=new THREE.Vector3(Math.sin(state.yaw),0,-Math.cos(state.yaw));if(state.firstPerson){camera.position.set(player.position.x,player.position.y+targetY,player.position.z);look.copy(camera.position).add(forward.multiplyScalar(8));}else{const offset=new THREE.Vector3(0,4.1,7.2).applyAxisAngle(new THREE.Vector3(0,1,0),state.yaw);const desired=player.position.clone().add(offset);camera.position.lerp(desired,1-Math.pow(.001,dt));look.set(player.position.x,player.position.y+1.35,player.position.z);look.add(forward.multiplyScalar(1.5));}camera.lookAt(look);}
 let last=performance.now();
 function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;if(state.started&&!state.paused){updateClock(dt);updatePlayer(dt);}updateCamera(dt);renderer.render(scene,camera);}
