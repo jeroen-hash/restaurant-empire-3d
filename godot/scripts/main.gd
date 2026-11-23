@@ -8,12 +8,14 @@ var player: PlayerController
 var economy
 var status_label: Label
 var save_label: Label
+var world: WorldBuilder
+var clock_accumulator := 0.0
 
 func _ready() -> void:
 	_setup_input()
 	GameState.load_game()
 	economy = EconomyScript.new(GameState.player_data, GameState.restaurant_data)
-	var world := WorldBuilderScript.new()
+	world = WorldBuilderScript.new()
 	world.name = "World"
 	add_child(world)
 
@@ -27,10 +29,30 @@ func _ready() -> void:
 	))
 	_build_hud()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if player != null:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
+
+	# Agreed game clock: one in-game minute per real second (a full day = 24 real minutes).
+	clock_accumulator += delta
+	if clock_accumulator >= 1.0:
+		var elapsed_minutes := int(clock_accumulator)
+		clock_accumulator -= float(elapsed_minutes)
+		var game_minutes := int(GameState.player_data.get("game_minutes", 480)) + elapsed_minutes
+		while game_minutes >= 1440:
+			game_minutes -= 1440
+			GameState.player_data["day"] = int(GameState.player_data.get("day", 1)) + 1
+		GameState.player_data["game_minutes"] = game_minutes
+		if world != null:
+			world.set_game_time(game_minutes)
+		if is_instance_valid(status_label):
+			status_label.text = "%s  ·  Dag %d  ·  %02d:%02d" % [
+				str(GameState.player_data.get("career_title", "Culinaire student")),
+				int(GameState.player_data.get("day", 1)),
+				int(game_minutes / 60),
+				game_minutes % 60
+			]
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
@@ -64,7 +86,13 @@ func _build_hud() -> void:
 	title.text = "ANIMO  ·  RESTAURANT EMPIRE 3D"
 	column.add_child(title)
 	status_label = Label.new()
-	status_label.text = "Culinaire student  ·  Dag 1"
+	var initial_minutes := int(GameState.player_data.get("game_minutes", 480))
+	status_label.text = "%s  ·  Dag %d  ·  %02d:%02d" % [
+		str(GameState.player_data.get("career_title", "Culinaire student")),
+		int(GameState.player_data.get("day", 1)),
+		int(initial_minutes / 60),
+		initial_minutes % 60
+	]
 	column.add_child(status_label)
 	save_label = Label.new()
 	save_label.text = "WASD / pijlen bewegen  ·  rechts slepen = camera"
