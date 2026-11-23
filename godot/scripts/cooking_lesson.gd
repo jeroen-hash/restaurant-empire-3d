@@ -21,7 +21,7 @@ func _init(data: Dictionary) -> void:
 	if not player_data.has("cooking_lessons_completed"):
 		player_data["cooking_lessons_completed"] = 0
 
-func perform_action(action: String, education) -> Dictionary:
+func perform_action(action: String, education, execution_quality := 100) -> Dictionary:
 	var stage := int(player_data.get("cooking_lesson_stage", 0))
 	var quality := int(player_data.get("cooking_lesson_quality", 100))
 	if stage < 0 or stage >= ACTIONS.size():
@@ -39,6 +39,9 @@ func perform_action(action: String, education) -> Dictionary:
 			"message": "Niet de juiste volgorde. Volgende stap: %s." % ACTION_LABELS[ACTIONS[stage]]
 		}
 
+	# The practical grade combines process quality with the player's timing in the hands-on station challenge.
+	quality = clampi(roundi(float(quality) * 0.65 + float(clampi(int(execution_quality), 0, 100)) * 0.35), 0, 100)
+	player_data["cooking_lesson_quality"] = quality
 	stage += 1
 	player_data["cooking_lesson_stage"] = stage
 	if stage < ACTIONS.size():
