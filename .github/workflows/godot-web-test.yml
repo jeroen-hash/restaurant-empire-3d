@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: godot-web-export-v3-${{ github.ref }}
+  group: godot-web-export-v4-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -50,6 +50,8 @@ jobs:
           mkdir -p godot/assets/characters
           curl -fL --retry 3 https://models.vinish.dev/people/casual-man.glb -o godot/assets/characters/casual-man.glb
           test -s godot/assets/characters/casual-man.glb
+          curl -fL --retry 3 https://models.vinish.dev/people/casual-woman.glb -o godot/assets/characters/casual-woman.glb
+          test -s godot/assets/characters/casual-woman.glb
 
       - name: Download CC0 restaurant environment assets
         run: |
