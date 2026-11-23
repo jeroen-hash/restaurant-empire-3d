@@ -53,8 +53,18 @@ func setup_player(value: PlayerController) -> void:
 		return
 	hand_anchor = Node3D.new()
 	hand_anchor.name = "HeldObjectAnchor"
-	hand_anchor.position = Vector3(0.0, -0.62, -0.28)
-	player.right_arm.add_child(hand_anchor)
+	# Imported rigged GLB characters do not expose the procedural right_arm
+	# pivot. Attach to that pivot when available; otherwise use a stable
+	# character-local hand position so pickup works with both character types.
+	if is_instance_valid(player.right_arm):
+		hand_anchor.position = Vector3(0.0, -0.62, -0.28)
+		player.right_arm.add_child(hand_anchor)
+	elif is_instance_valid(player.character):
+		hand_anchor.position = Vector3(0.28, 0.86, -0.28)
+		player.character.add_child(hand_anchor)
+	else:
+		hand_anchor.position = Vector3(0.28, 0.86, -0.28)
+		player.add_child(hand_anchor)
 
 func has_interactable_target() -> bool:
 	return is_instance_valid(player) and not _camera_hit().is_empty()
