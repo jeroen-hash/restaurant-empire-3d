@@ -168,23 +168,31 @@ func get_context() -> Dictionary:
 	if player == null:
 		return {}
 	var pos := player.global_position
-	if pos.distance_to(SCHOOL_ORIGIN + Vector3(-6.0, 0.0, -2.0)) <= REACH:
-		return {"label": "OPEN KOELKAST", "target": "fridge"}
-	if pos.distance_to(SCHOOL_ORIGIN + Vector3(-6.0, 0.0, 1.2)) <= REACH:
-		return {"label": "OPEN DIEPVRIES", "target": "freezer"}
-	if pos.distance_to(SCHOOL_ORIGIN + Vector3(-6.0, 0.0, 4.5)) <= REACH:
-		return {"label": "BEKIJK DROGE STOCK", "target": "dry"}
-	if pos.distance_to(SCHOOL_ORIGIN + Vector3(-3.8, 0.0, 5.5)) <= REACH:
-		return {"label": "NEEM GEREEDSCHAP", "target": "tools"}
-	if pos.distance_to(counter_position) <= REACH:
+	var candidates := [
+		{"target": "fridge", "position": SCHOOL_ORIGIN + Vector3(-6.0, 0.0, -2.0), "label": "OPEN KOELKAST"},
+		{"target": "freezer", "position": SCHOOL_ORIGIN + Vector3(-6.0, 0.0, 1.2), "label": "OPEN DIEPVRIES"},
+		{"target": "dry", "position": SCHOOL_ORIGIN + Vector3(-6.0, 0.0, 4.5), "label": "BEKIJK DROGE STOCK"},
+		{"target": "tools", "position": SCHOOL_ORIGIN + Vector3(-3.8, 0.0, 5.5), "label": "NEEM GEREEDSCHAP"},
+		{"target": "counter", "position": counter_position, "label": "WERKBLAD"}
+	]
+	var nearest: Dictionary = {}
+	var nearest_distance := INF
+	for candidate in candidates:
+		var distance := pos.distance_to(candidate["position"])
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest = candidate
+	if nearest_distance > REACH:
+		return {}
+	var target := str(nearest["target"])
+	if target == "counter":
 		if not board_on_counter and _is_holding("cutting_board"):
 			return {"label": "LEG SNIJPLANK NEER", "target": "place_board"}
 		if not inventory.get_held_item().is_empty():
 			return {"label": "LEG INGREDIËNT NEER", "target": "place_food"}
 		if board_on_counter and knife_in_hand and not Dictionary(GameState.player_data.get("kitchen_worktop", {})).is_empty():
 			return {"label": "SNIJD INGREDIËNT", "target": "cut"}
-		return {"label": "WERKBLAD", "target": "counter"}
-	return {}
+	return {"label": str(nearest["label"]), "target": target}
 
 func _is_holding(item_id: String) -> bool:
 	return str(GameState.player_data.get("kitchen_held_tool", "")) == item_id
