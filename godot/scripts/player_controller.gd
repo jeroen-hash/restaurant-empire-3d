@@ -7,7 +7,7 @@ class_name PlayerController
 @export var gravity := 18.0
 @export var mouse_sensitivity := 0.003
 @export var touch_sensitivity := 0.006
-@export var camera_distance := 2.0
+@export var camera_distance := 3.6
 var first_person := false
 var is_working := false
 var working_action := "prepare"
@@ -68,7 +68,7 @@ func _ready() -> void:
 	camera = Camera3D.new()
 	camera.name = "ThirdPersonCamera"
 	camera.position = Vector3.ZERO
-	camera.fov = 52.0
+	camera.fov = 58.0
 	camera_arm.add_child(camera)
 	camera.current = true
 	_build_touch_controls()
