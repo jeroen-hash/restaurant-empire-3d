@@ -33,6 +33,16 @@ func _run_tests() -> void:
 	_assert(int(data["cooking_lesson_stage"]) == 0, "Next practical lesson resets to the first step")
 	_assert(int(data["cooking_lesson_quality"]) == 100, "Next practical lesson starts with full quality")
 
+	var timing_data := {"career_title": "Culinaire student", "career_level": 1}
+	var timing_education = EducationScript.new(timing_data)
+	var timing_lesson = CookingLessonScript.new(timing_data)
+	var precise_action: Dictionary = timing_lesson.perform_action("prepare", timing_education, 100)
+	_assert(precise_action["ok"], "A correctly timed kitchen action is accepted")
+	_assert(int(timing_data["cooking_lesson_quality"]) == 100, "Precise timing preserves full practical quality")
+	var poor_action: Dictionary = timing_lesson.perform_action("cook", timing_education, 0)
+	_assert(poor_action["ok"], "A poorly timed kitchen action still advances the lesson")
+	_assert(int(timing_data["cooking_lesson_quality"]) < 100, "Poor timing lowers the practical grade")
+
 	if failures == 0:
 		print("COOKING LESSON TESTS PASSED")
 		quit(0)
