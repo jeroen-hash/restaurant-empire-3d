@@ -47,8 +47,8 @@ func _ready() -> void:
 
 	camera = Camera3D.new()
 	camera.name = "ThirdPersonCamera"
-	camera.position = Vector3(0, 1.45, camera_distance)
-	camera.fov = 62.0
+	camera.position = Vector3(0, 0.55, camera_distance)
+	camera.fov = 66.0
 	camera_pivot.add_child(camera)
 	camera.current = true
 	_build_touch_controls()
