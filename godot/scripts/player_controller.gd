@@ -131,7 +131,9 @@ func _build_humanoid() -> void:
 	# Prefer a real textured, rigged GLB character. Keep the procedural figure
 	# only as a safe fallback if the asset is unavailable.
 	var model_path := "res://assets/characters/casual-woman.glb" if character_type == "woman" else "res://assets/characters/casual-man.glb"
-	var character_scene := load(model_path) as PackedScene
+	var character_scene: PackedScene = null
+	if ResourceLoader.exists(model_path):
+		character_scene = load(model_path) as PackedScene
 	if character_scene != null:
 		var imported_model := character_scene.instantiate()
 		imported_model.name = "RiggedHuman"
