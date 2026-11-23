@@ -75,8 +75,8 @@ func toggle_camera_mode() -> bool:
 		camera.position = Vector3(0, 0, 0.08)
 		character.visible = false
 	else:
-		camera_pivot.position = Vector3(0, 1.48, 0)
-		camera.position = Vector3(0, 0.32, camera_distance)
+		camera_pivot.position = Vector3(0, 1.35, 0)
+		camera.position = Vector3(0, 0.10, camera_distance)
 		character.visible = true
 	return first_person
 
