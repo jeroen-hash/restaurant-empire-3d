@@ -18,7 +18,7 @@ let renderer,scene,camera,clock;
 let playerRoot,playerMixer,playerActions={},activeAction=null;
 let fallbackAvatar=null;
 const cafeDoorLeaves=[];
-let insideCafe=false,thirdPerson=true,doorOpen=false;
+let insideCafe=false,thirdPerson=true,doorOpen=false,menuOpen=false;
 let yaw=0,pitch=0.22,moveX=0,moveY=0,joystickActive=false;
 let toastTimer=0;
 const keys={};
@@ -452,6 +452,7 @@ function playAction(name){
 }
 function setMovement(x,y){moveX=x;moveY=y}
 function updatePlayer(dt){
+  if(menuOpen){moveX=0;moveY=0;return}
   const forward=new THREE.Vector3(Math.sin(yaw),0,-Math.cos(yaw));
   const right=new THREE.Vector3(-forward.z,0,forward.x);
   const v=forward.clone().multiplyScalar(moveY).addScaledVector(right,moveX);
@@ -622,9 +623,42 @@ function frame(){
   updateCafeDoors(dt);
   renderer.render(scene,camera);
 }
+
+function setupGameMenus(){
+  const panel=document.querySelector('#managementPanel');
+  const title=document.querySelector('#panelTitle');
+  const intro=document.querySelector('#panelIntro');
+  const options=document.querySelector('#panelOptions');
+  const nav=[...document.querySelectorAll('.game-nav button')];
+  const content={
+    restaurant:{title:'Jouw restaurant',intro:'Bouw je eigen horecazaak uit. De restaurantstructuur wordt de centrale plek voor inrichting, keuken, klanten en dagelijkse werking.',items:[['Inrichting','Meubels, toestellen, verlichting en decoratie plaatsen.'],['Keuken & koken','Voorbereiden, koken, dresseren en bestellingen doorgeven.'],['Klanten','Reserveringen, bestellingen, bediening en beoordelingen.'],['Voorraad & recepten','Ingrediënten, leveranciers, recepten en foodcost.']]},
+    shop:{title:'ANIMO-winkels',intro:'Alle aankopen krijgen een vaste plaats in de wereld van ANIMO, met aparte winkels voor privé en professioneel gebruik.',items:[['ANIMO Market','Persoonlijke boodschappen en dagelijkse benodigdheden.'],['ANIMO Foodservice','Professionele ingrediënten, dranken en horecavoorraad.'],['ANIMO Workwear','Werkkledij, schoenen en uniformen.'],['Uitrusting','Keukenapparatuur, meubels en restaurantuitbreiding.']]},
+    team:{title:'Personeel & contacten',intro:'Bouw relaties op en stel een team samen dat met je carrière meegroeit.',items:[['Team beheren','Rollen, contracten, uurroosters en lonen.'],['Aanwerven','Sollicitaties, gesprekken en proefshifts.'],['Opleiden','Vaardigheden, specialisaties en promoties.'],['Relaties','Vrienden, rivalen, mentoren en toekomstige partners.']]},
+    finance:{title:'Financiën & ANIMO Bank',intro:'Volg de financiële gezondheid van je zaak en maak keuzes met gevolgen op lange termijn.',items:[['Kas & resultaten','Omzet, kosten, winst en dagelijkse afsluiting.'],['Investeringen','Aankopen, verbouwingen en uitbreidingen.'],['ANIMO Bank','Leningen, rente, krediet en terugbetalingen.'],['Risico','Verzekering, onderhoud, schulden en faillissementsrisico.']]},
+    career:{title:'Jouw carrière',intro:'Begin als student en bouw stap voor stap aan een lange horeca-carrière, tot je een eigen onderneming runt.',items:[['Culinaire school','Drie studiejaren, lessen, examens en diploma.'],['Werk & ervaring','Solliciteren, contracten, shiften en promoties.'],['Vaardigheden','Koken, gastvrijheid, leidinggeven en ondernemerschap.'],['ANIMO Guide','ANIMO STARS en de 20-puntenscore van de Culinary Guide.']]}
+  };
+  function close(){panel.hidden=true;menuOpen=false;nav.forEach(b=>b.classList.remove('active'))}
+  function open(key){
+    const data=content[key];if(!data)return;
+    title.textContent=data.title;intro.textContent=data.intro;options.innerHTML='';
+    data.items.forEach(([name,desc])=>{
+      const card=document.createElement('div');card.className='panel-option';
+      const strong=document.createElement('strong');strong.textContent=name;
+      const span=document.createElement('span');span.textContent=desc;
+      card.append(strong,span);options.append(card);
+    });
+    panel.hidden=false;menuOpen=true;
+    nav.forEach(b=>b.classList.toggle('active',b.dataset.panel===key));
+  }
+  nav.forEach(b=>b.addEventListener('click',()=>open(b.dataset.panel)));
+  document.querySelector('#menuToggle').addEventListener('click',()=>panel.hidden?open('restaurant'):close());
+  document.querySelector('#closePanel').addEventListener('click',close);
+  document.addEventListener('keydown',e=>{if(e.code==='Escape'&&!panel.hidden)close()});
+}
+
 async function start(){
   try{
-    worldParts=buildWorld();bindControls();
+    worldParts=buildWorld();bindControls();setupGameMenus();
     loadingText.textContent='Materialen en licht worden geladen…';
     const [lighting,character,cafeBar]=await Promise.all([loadLighting(),loadCharacter(),loadCafeBar()]);
     if(character&&cafeBar)setStatus('3D-wereld klaar · echte café-apparatuur geladen');
