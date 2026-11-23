@@ -7,6 +7,7 @@ var world_environment: WorldEnvironment
 
 func _ready() -> void:
 	_build_lighting()
+	_build_world_safety_floor()
 	_build_street()
 	_build_cafe()
 	_build_culinary_school()
@@ -110,6 +111,15 @@ func _build_lighting() -> void:
 	sun_light.directional_shadow_max_distance = 38.0
 	add_child(sun_light)
 	set_game_time(8 * 60)
+
+func _build_world_safety_floor() -> void:
+	# Large continuous collision floor beneath the playable campus/street area.
+	_collision_box(self, "WorldSafetyGround", Vector3(0, -0.42, 0), Vector3(180.0, 0.8, 180.0))
+	# Soft perimeter barriers prevent walking off the playable first-city test area.
+	_collision_box(self, "WorldBoundaryNorth", Vector3(0, 2.0, -82.0), Vector3(164.0, 4.0, 1.0))
+	_collision_box(self, "WorldBoundarySouth", Vector3(0, 2.0, 82.0), Vector3(164.0, 4.0, 1.0))
+	_collision_box(self, "WorldBoundaryWest", Vector3(-82.0, 2.0, 0), Vector3(1.0, 4.0, 164.0))
+	_collision_box(self, "WorldBoundaryEast", Vector3(82.0, 2.0, 0), Vector3(1.0, 4.0, 164.0))
 
 func _build_street() -> void:
 	_box(self, "Road", Vector3(0, -0.18, 3), Vector3(42, 0.3, 32), Color(0.105, 0.115, 0.12))
