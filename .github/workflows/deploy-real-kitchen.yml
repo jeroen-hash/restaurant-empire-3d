@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: github-pages
+  group: restaurant-empire-3d-test-export
   cancel-in-progress: true
 
 jobs:
