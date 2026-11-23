@@ -46,3 +46,37 @@ body{overscroll-behavior:none}
 
 .asset-credit{position:absolute;z-index:3;right:20px;bottom:calc(env(safe-area-inset-bottom) + 36px);color:#ffffff80;font-size:7px;letter-spacing:.09em;text-decoration:none;text-shadow:0 1px 8px #000}
 @media(max-width:700px){.asset-credit{right:16px;bottom:calc(env(safe-area-inset-bottom) + 12px);font-size:6px}}
+
+/* Game-management interface: clear My Café-inspired navigation, original ANIMO styling. */
+.game-header{position:absolute;z-index:5;top:calc(env(safe-area-inset-top) + 66px);right:20px;display:flex;gap:10px;align-items:center}
+.career-chip,.menu-toggle{border:1px solid #ffffff35;background:rgba(16,21,20,.76);backdrop-filter:blur(14px);color:#f5eee2;border-radius:24px;padding:9px 13px;font-size:9px;letter-spacing:.12em}
+.career-chip{display:flex;align-items:center;gap:7px}.career-chip strong{color:#e3c18d}
+.career-dot{width:6px;height:6px;border-radius:50%;background:#cba66f;box-shadow:0 0 8px #cba66f}
+.menu-toggle{font-weight:800;border-color:#c6a16b88}
+.game-nav{position:absolute;z-index:5;left:50%;bottom:calc(env(safe-area-inset-bottom) + 14px);transform:translateX(-50%);display:flex;gap:5px;padding:6px;border:1px solid #ffffff25;border-radius:20px;background:rgba(13,19,18,.84);backdrop-filter:blur(18px);box-shadow:0 10px 36px #0008}
+.game-nav button{width:78px;min-height:58px;border:0;border-radius:14px;background:transparent;color:#d7d1c7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.game-nav button:active,.game-nav button.active{background:linear-gradient(145deg,#c7a16d,#8f6a40);color:#171815}
+.game-nav button span{font-size:19px;line-height:1}.game-nav button small{font-size:7px;letter-spacing:.1em;font-weight:800}
+.management-panel{position:absolute;z-index:8;right:20px;top:calc(env(safe-area-inset-top) + 112px);width:min(390px,calc(100vw - 32px));max-height:min(64vh,560px);overflow:auto;padding:20px;border:1px solid #d0b17b66;border-radius:22px;background:linear-gradient(145deg,rgba(30,38,34,.97),rgba(13,18,17,.97));color:#f3eee5;box-shadow:0 22px 70px #0009;backdrop-filter:blur(22px)}
+.panel-heading{display:flex;justify-content:space-between;align-items:flex-start}.panel-kicker{font-size:8px;letter-spacing:.2em;color:#d4b47f;font-weight:800}
+.panel-heading h2{font-family:Georgia,serif;font-size:29px;font-weight:500;margin:5px 0 0}
+.close-panel{width:34px;height:34px;border:1px solid #ffffff35;border-radius:50%;background:#ffffff0d;color:#fff;font-size:24px;line-height:1}
+.management-panel>p{font-size:12px;line-height:1.55;color:#d2d0c8;margin:12px 0 16px}
+.panel-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.panel-option{min-height:76px;padding:12px;border:1px solid #ffffff20;border-radius:13px;background:#ffffff08;color:#f2eee6;text-align:left}
+.panel-option strong{display:block;font-size:11px;margin-bottom:5px}.panel-option span{display:block;font-size:9px;line-height:1.4;color:#c5c2b9}
+.panel-footnote{border-top:1px solid #ffffff20;margin-top:15px;padding-top:12px;color:#aaa99f;font-size:9px;line-height:1.5}
+@media(max-width:700px){
+ .game-header{top:calc(env(safe-area-inset-top) + 62px);right:14px}
+ .career-chip{display:none}.menu-toggle{padding:8px 12px}
+ .game-nav{width:calc(100vw - 20px);justify-content:space-around;bottom:calc(env(safe-area-inset-bottom) + 10px);gap:1px}
+ .game-nav button{width:auto;flex:1;min-height:54px}
+ .game-nav button small{font-size:6px;letter-spacing:.06em}
+ .management-panel{top:calc(env(safe-area-inset-top) + 105px);right:10px;width:calc(100vw - 20px);max-height:54vh;padding:16px}
+ .status{bottom:calc(env(safe-area-inset-bottom) + 82px)}
+ .stick-zone{bottom:calc(env(safe-area-inset-bottom) + 86px)}
+ .action-btn{bottom:calc(env(safe-area-inset-bottom) + 92px)}
+ .camera-btn{bottom:calc(env(safe-area-inset-bottom) + 158px)}
+ .asset-credit{display:none}
+}
+@media(max-width:360px){.game-nav button small{font-size:5.5px}.game-nav button span{font-size:17px}}
