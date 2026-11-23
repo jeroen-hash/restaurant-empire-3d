@@ -29,8 +29,21 @@ func _run_tests() -> void:
 	var button: Button = game.get_node_or_null("HUD/KitchenContextButton")
 	_assert(button != null, "Single contextual kitchen button exists")
 	if button != null:
-		_assert(button.visible, "Cutting button appears beside the cutting board")
-		_assert(button.text == "SNIJDEN", "Context button shows the correct cutting action")
+		_assert(button.visible, "Context button appears when the camera targets a kitchen object")
+		if kitchen != null:
+			var mock_knife := Node3D.new()
+			mock_knife.name = "TestHeldKnife"
+			kitchen.add_child(mock_knife)
+			kitchen.held_item = mock_knife
+			kitchen.held_item_id = "knife"
+			kitchen.board_placed = true
+			kitchen.board_has_ingredient = true
+			kitchen.board_ingredient_id = "chicken"
+			await process_frame
+			_assert(button.text == "SNIJDEN", "Context button shows the cutting action when holding a knife over an ingredient")
+			kitchen.held_item = null
+			kitchen.held_item_id = ""
+			mock_knife.queue_free()
 		_assert(button.anchor_left == 1.0 and button.anchor_right == 1.0, "Context button is positioned on the right side")
 		_assert(game.get_node_or_null("HUD/KitchenActionBar") == null, "The fixed bottom action bar is removed")
 	game.player.set_spawn_position(Vector3(0.0, 0.0, 0.0))
