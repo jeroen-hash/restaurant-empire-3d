@@ -18,6 +18,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: godot-web-export-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate-and-export:
     runs-on: ubuntu-latest
@@ -56,6 +60,8 @@ jobs:
           test -s godot/assets/environment/restaurant-2-top-table-set.glb
           curl -fL --retry 3 https://cdn.3dassets.dev/assets/16541/v1/model.glb -o godot/assets/environment/working-kitchen-line.glb
           test -s godot/assets/environment/working-kitchen-line.glb
+          npx --yes @gltf-transform/cli dequantize godot/assets/environment/working-kitchen-line.glb /tmp/working-kitchen-line.glb
+          mv /tmp/working-kitchen-line.glb godot/assets/environment/working-kitchen-line.glb
 
       - name: Import and parse Godot project
         run: godot --headless --editor --path godot --quit
