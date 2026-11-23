@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - rebuild/visual-foundation
+      - rebuild/real-kitchen-v1
     paths:
       - "godot/**"
       - ".github/workflows/godot-check.yml"
