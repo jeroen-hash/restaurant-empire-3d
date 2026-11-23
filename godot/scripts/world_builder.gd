@@ -410,12 +410,28 @@ func show_cooking_action(action: String) -> void:
 	station.add_child(visual)
 	if action == "prepare":
 		# Cut vegetables as small, recognisable food pieces on the board.
+		# A visible chef's knife beside the prepared ingredients.
+		var knife_blade := _box(visual, "ChefKnifeBlade", Vector3(0.23, 1.13, -0.04), Vector3(0.30, 0.018, 0.055), Color(0.72, 0.76, 0.79), false)
+		knife_blade.rotation.y = -0.25
+		var knife_handle := _box(visual, "ChefKnifeHandle", Vector3(0.40, 1.13, -0.04), Vector3(0.12, 0.035, 0.065), Color(0.20, 0.13, 0.09), false)
+		knife_handle.rotation.y = -0.25
 		for i in range(5):
 			var carrot := _cylinder(visual, "CarrotSlice_%02d" % i, Vector3(-0.25 + float(i) * 0.12, 1.12, -0.10), 0.045, 0.11, Color(0.86, 0.31, 0.08), 12)
 			carrot.rotation.z = PI * 0.5
 			_box(visual, "OnionDice_%02d" % i, Vector3(-0.22 + float(i) * 0.11, 1.12, 0.12), Vector3(0.075, 0.055, 0.07), Color(0.88, 0.82, 0.67), false)
 	elif action == "load_pan":
 		# Visible food enters the pan only after the player presses the contextual load action.
+		var pan := _cylinder(visual, "ANIMOSteelPan", Vector3(0, 1.105, 0), 0.29, 0.07, Color(0.16, 0.18, 0.20), 40)
+		var pan_rim := MeshInstance3D.new()
+		pan_rim.name = "PanRim"
+		var pan_rim_mesh := TorusMesh.new()
+		pan_rim_mesh.inner_radius = 0.255
+		pan_rim_mesh.outer_radius = 0.29
+		pan_rim.mesh = pan_rim_mesh
+		pan_rim.position = Vector3(0, 1.145, 0)
+		pan_rim.material_override = _material(Color(0.38, 0.40, 0.42), 0.28)
+		visual.add_child(pan_rim)
+		var pan_handle := _box(visual, "PanHandle", Vector3(0.38, 1.105, 0), Vector3(0.34, 0.045, 0.07), Color(0.13, 0.13, 0.14), false)
 		for i in range(3):
 			var chicken := _box(visual, "ChickenPiece_%02d" % i, Vector3(-0.12 + float(i) * 0.12, 1.18, -0.06 + float(i % 2) * 0.12), Vector3(0.14, 0.065, 0.10), Color(0.79, 0.60, 0.40), false)
 			chicken.rotation.y = float(i) * 0.55
