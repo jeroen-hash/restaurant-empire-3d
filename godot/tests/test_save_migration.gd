@@ -32,6 +32,7 @@ func _run_tests() -> void:
 	_assert(is_equal_approx(float(state.player_data["position"]["x"]), -22.0), "Legacy save moves player to culinary school")
 	_assert(is_equal_approx(float(state.player_data["position"]["z"]), -5.3), "Legacy save receives correct school entrance position")
 	_assert(int(state.player_data["education_year"]) == 1, "Legacy save receives school progression defaults")
+	_assert(str(state.player_data["avatar_type"]) == "man", "Legacy save receives a default playable character")
 
 	var migrated_file := FileAccess.open(state.SAVE_PATH, FileAccess.READ)
 	if migrated_file != null:
