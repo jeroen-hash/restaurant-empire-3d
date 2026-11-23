@@ -2,13 +2,16 @@ extends RefCounted
 class_name CookingLesson
 ## Practical kitchen exercise with an explicit ingredient-loading step.
 
-const ACTIONS := ["prepare", "load_pan", "cook", "season", "plate"]
+const ACTIONS := ["prepare", "load_pan", "cook", "season", "plate_main", "plate_side", "plate_veg", "plate_finish"]
 const ACTION_LABELS := {
 	"prepare": "Ingrediënten snijden en voorbereiden",
 	"load_pan": "De gesneden ingrediënten in de pan doen",
 	"cook": "De ingrediënten garen",
 	"season": "Kruiden en proeven",
-	"plate": "Het gerecht zelf dresseren"
+	"plate_main": "Hoofdingrediënt op het bord leggen",
+	"plate_side": "Bijgerecht op het bord schikken",
+	"plate_veg": "Groenten op het bord schikken",
+	"plate_finish": "Saus en laatste afwerking aanbrengen"
 }
 
 var player_data: Dictionary
