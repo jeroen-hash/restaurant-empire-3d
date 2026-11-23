@@ -59,9 +59,6 @@ func handle_interaction() -> bool:
 		if hit.has("collider") and hit.collider == hob_area and held_item_id == "":
 			_start_cooking()
 			return true
-		if hit.has("collider") and hit.collider == board_area and held_item_id == "pan" and chicken_cut and not chicken_in_pan:
-			_load_chicken_into_pan()
-			return true
 		if hit.has("collider") and hit.collider == plate_area and held_item_id == "plate" and chicken_cooked:
 			_serve_to_plate()
 			return true
@@ -71,6 +68,9 @@ func handle_interaction() -> bool:
 		return true
 	if hit.is_empty():
 		return false
+	if hit.collider == board_area and pan_on_hob and chicken_cut and not chicken_in_pan:
+		_load_chicken_into_pan()
+		return true
 	var target := hit.collider as Node3D
 	if target == null:
 		return false
@@ -185,7 +185,7 @@ func _place_pan_on_hob() -> void:
 	held_item = null
 	held_item_id = ""
 	pan_on_hob = true
-	status_changed.emit("Pan staat op de kookplaat. Neem de pan vast en richt op de snijplank om de gesneden kip toe te voegen.")
+	status_changed.emit("Pan staat op de kookplaat. Maak je handen vrij en richt op de snijplank om de kip in de pan te doen.")
 
 func _load_chicken_into_pan() -> void:
 	if not pan_on_hob or not chicken_cut or chicken_in_pan:
