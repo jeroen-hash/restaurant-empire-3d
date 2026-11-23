@@ -39,6 +39,17 @@ func _box(parent: Node3D, label: String, pos: Vector3, size: Vector3, color: Col
 		parent.add_child(body)
 	return mesh_instance
 
+func _collision_box(parent: Node3D, label: String, pos: Vector3, size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = label
+	var shape := CollisionShape3D.new()
+	var box_shape := BoxShape3D.new()
+	box_shape.size = size
+	shape.shape = box_shape
+	body.add_child(shape)
+	body.position = pos
+	parent.add_child(body)
+
 func _cylinder(parent: Node3D, label: String, pos: Vector3, radius: float, height: float, color: Color, sides := 20) -> MeshInstance3D:
 	var node := MeshInstance3D.new()
 	node.name = label
@@ -173,6 +184,28 @@ func _build_cafe() -> void:
 	cafe.name = "ANIMO_CAFE"
 	cafe.position = Vector3(0, 0, -7.2)
 	add_child(cafe)
+
+	# Prefer a complete, real-scale CC0 restaurant interior over the old blockout.
+	var dining_scene := load("res://assets/environment/casual-dining-restaurant-interior-60-covers.glb") as PackedScene
+	if dining_scene != null:
+		var dining := dining_scene.instantiate()
+		dining.name = "ANIMO_60_Cover_Restaurant_Interior"
+		dining.scale = Vector3.ONE * 0.8
+		cafe.add_child(dining)
+		# Collision boundary keeps the player inside the cut-away room while leaving the front open.
+		_collision_box(cafe, "RestaurantFloorCollision", Vector3(0, -0.14, 0), Vector3(12.2, 0.28, 8.6))
+		_collision_box(cafe, "RestaurantBackWallCollision", Vector3(0, 1.55, -4.25), Vector3(12.2, 3.1, 0.2))
+		_collision_box(cafe, "RestaurantLeftWallCollision", Vector3(-6.05, 1.55, 0), Vector3(0.2, 3.1, 8.6))
+		_collision_box(cafe, "RestaurantRightWallCollision", Vector3(6.05, 1.55, 0), Vector3(0.2, 3.1, 8.6))
+		_label(cafe, "ANIMO CAFE", Vector3(0, 3.45, 4.45), 0.34)
+		for x in [-3.5, 0.0, 3.5]:
+			var dining_light := OmniLight3D.new()
+			dining_light.position = Vector3(x, 2.65, 0.0)
+			dining_light.light_color = Color(1.0, 0.82, 0.62)
+			dining_light.light_energy = 0.8
+			dining_light.omni_range = 5.5
+			cafe.add_child(dining_light)
+		return
 
 	var wall := Color(0.17, 0.22, 0.19)
 	var wood := Color(0.24, 0.15, 0.095)
