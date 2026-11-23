@@ -12,7 +12,7 @@ var player: PlayerController
 var hand_anchor: Node3D
 var held_item: Node3D
 var held_item_id := ""
-var stock := {"chicken": 4, "carrot": 6, "potato": 6}
+var stock := {"chicken": 4, "carrot": 6, "potato": 6, "salt": 3}
 var item_nodes: Dictionary = {}
 var board_area: Area3D
 var tool_rack_area: Area3D
@@ -29,6 +29,7 @@ var pan_on_hob := false
 var chicken_in_pan := false
 var chicken_cooked := false
 var plated := false
+var seasoning_added := false
 var heat_level := 0
 var cooking_active := false
 var cook_elapsed := 0.0
@@ -72,6 +73,9 @@ func handle_interaction() -> bool:
 		if hit.has("collider") and hit.collider == hob_area and held_item_id == "pan":
 			_place_pan_on_hob()
 			return true
+		if hit.has("collider") and hit.collider == hob_area and held_item_id == "salt" and pan_on_hob and not seasoning_added:
+			_add_seasoning_to_pan()
+			return true
 		if hit.has("collider") and hit.collider == board_area and held_item_id in ["chicken", "carrot", "potato"] and board_placed and not board_has_ingredient:
 			_place_ingredient_on_board()
 			return true
@@ -104,10 +108,11 @@ func handle_interaction() -> bool:
 			knife_taken = true
 		_pickup(target, item_id)
 		return true
-	if item_id in ["chicken", "carrot", "potato"] and int(stock.get(item_id, 0)) > 0:
+	if item_id in ["chicken", "carrot", "potato", "salt"] and int(stock.get(item_id, 0)) > 0:
 		stock[item_id] = int(stock[item_id]) - 1
 		_pickup(target, item_id)
-		status_changed.emit("%s uit de koeling genomen · voorraad: %d" % [_item_label(item_id), int(stock[item_id])])
+		var source_text := "droge voorraad" if item_id == "salt" else "koeling"
+		status_changed.emit("%s uit de %s genomen · voorraad: %d" % [_item_label(item_id), source_text, int(stock[item_id])])
 		return true
 	return false
 
@@ -280,6 +285,28 @@ func _load_prepared_ingredient_into_pan() -> void:
 		chicken_in_pan = true
 	status_changed.emit("%s toegevoegd aan de pan. Je kunt nog meer voorbereide ingrediënten toevoegen; richt op de kookplaat om de warmte te regelen." % _item_label(ingredient_id))
 
+func _add_seasoning_to_pan() -> void:
+	if not is_instance_valid(held_item) or held_item_id != "salt" or not pan_on_hob or seasoning_added:
+		return
+	var shaker := held_item
+	hand_anchor.remove_child(shaker)
+	shaker.queue_free()
+	held_item = null
+	held_item_id = ""
+	seasoning_added = true
+	var sprinkle := MeshInstance3D.new()
+	sprinkle.name = "TemporarySeasoningInPan"
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.045
+	mesh.height = 0.025
+	sprinkle.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.93, 0.91, 0.78)
+	sprinkle.material_override = material
+	sprinkle.position = Vector3(0.0, 0.31, 0.0)
+	hob_area.add_child(sprinkle)
+	status_changed.emit("Zout toegevoegd aan de pan. De droge voorraad is met één portie verminderd.")
+
 func _advance_heat() -> void:
 	if not chicken_in_pan or chicken_cooked:
 		return
@@ -342,6 +369,9 @@ func _build_blockout() -> void:
 		_add_item("carrot", _stock_item_position("carrot", i), _stock_item_color("carrot"), _stock_item_size("carrot"))
 	for i in range(int(stock["potato"])):
 		_add_item("potato", _stock_item_position("potato", i), _stock_item_color("potato"), _stock_item_size("potato"))
+	_make_station("Droge voorraad · kruiden", Vector3(-4.0, 0.72, 0.15), Vector3(0.9, 0.10, 0.65), Color(0.48, 0.39, 0.28))
+	for i in range(int(stock["salt"])):
+		_add_item("salt", Vector3(-4.25 + float(i % 3) * 0.22, 0.95, 0.05 + float(i / 3) * 0.20), Color(0.91, 0.88, 0.72), Vector3(0.09, 0.16, 0.09))
 	_make_station("Werkblad", Vector3(-2.3, 0.88, 1.8), Vector3(2.2, 0.12, 1.0), Color(0.55, 0.58, 0.58))
 	board_area = _make_station("TemporaryBoardPlacementTarget", Vector3(-2.3, 1.02, 1.8), Vector3(0.75, 0.10, 0.48), Color(0.32, 0.34, 0.34))
 	tool_rack_area = _make_station("Gereedschapsrek", Vector3(-1.0, 1.45, 1.0), Vector3(0.8, 0.65, 0.12), Color(0.25, 0.27, 0.27))
@@ -429,6 +459,7 @@ func _item_label(item_id: String) -> String:
 		"chicken": return "Kip"
 		"carrot": return "Wortel"
 		"potato": return "Aardappel"
+		"salt": return "Zout"
 		"board": return "Snijplank"
 		"knife": return "Mes"
 		"pan": return "Pan"
