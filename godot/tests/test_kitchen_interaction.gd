@@ -14,24 +14,44 @@ func _run_tests() -> void:
 	var game := scene.instantiate()
 	root.add_child(game)
 	await process_frame
-	game.player.set_spawn_position(Vector3(-25.0, 0.0, -5.0))
-	var button: Button = game.get_node_or_null("HUD/KitchenActionBar/KitchenInteractButton")
-	_assert(button != null, "Dedicated kitchen interaction button exists")
-	if button != null:
-		_assert(button.get_parent().name == "KitchenActionBar", "Kitchen action buttons are in a dedicated touch bar")
-		_assert(button.visible, "Kitchen interaction button remains visible on mobile")
-		_assert(button.get_parent().anchor_bottom == 1.0, "Kitchen action bar is anchored to the bottom of the screen")
-		_assert(button.custom_minimum_size.y >= 50.0, "Kitchen interaction button is large enough for touch")
-		_assert(game.get_node_or_null("HUD/KitchenActionBar/KitchenAction_cook") != null, "Dedicated cooking action button exists")
-		_assert(game.get_node_or_null("HUD/KitchenActionBar/KitchenAction_season") != null, "Dedicated seasoning action button exists")
-		_assert(game.get_node_or_null("HUD/KitchenActionBar/KitchenAction_plate") != null, "Dedicated plating action button exists")
-	var nearest: Dictionary = game._get_nearest_cooking_station(game.player.global_position)
-	_assert(float(nearest.get("distance", INF)) <= 2.6, "Starting position is within reach of the first cooking station")
+	game.player.set_spawn_position(Vector3(-25.0, 0.0, -6.75))
 	await process_frame
-	_assert(not button.disabled, "Kitchen action button activates when the player reaches a workstation")
-	button.pressed.emit()
-	_assert(game.cooking_challenge_active, "Touch interaction starts the first cutting action")
-	_assert(game.player.is_working, "Player enters working state during the cooking action")
+	var button: Button = game.get_node_or_null("HUD/KitchenContextButton")
+	_assert(button != null, "Single contextual kitchen button exists")
+	if button != null:
+		_assert(button.visible, "Cutting button appears beside the cutting board")
+		_assert(button.text == "SNIJDEN", "Context button shows the correct cutting action")
+		_assert(button.anchor_left == 1.0 and button.anchor_right == 1.0, "Context button is positioned on the right side")
+		_assert(game.get_node_or_null("HUD/KitchenActionBar") == null, "The fixed bottom action bar is removed")
+	game.player.set_spawn_position(Vector3(0.0, 0.0, 0.0))
+	await process_frame
+	_assert(button != null and not button.visible, "Context button disappears away from kitchen workstations")
+
+	# Validate the recipe sequence: cutting alone is not enough to start cooking.
+	var data := {"cooking_lesson_stage": 0, "cooking_lesson_quality": 100, "cooking_lessons_completed": 0}
+	var lesson := game.CookingLessonScript.new(data)
+	var blocked := lesson.perform_action("cook", game.education, 100)
+	_assert(not bool(blocked.get("ok", false)), "Cooking cannot start before the preparation and pan-loading steps")
+	var prepared := lesson.perform_action("prepare", game.education, 100)
+	_assert(bool(prepared.get("ok", false)), "Player can complete ingredient preparation")
+	var still_blocked := lesson.perform_action("cook", game.education, 100)
+	_assert(not bool(still_blocked.get("ok", false)), "Cooking remains blocked until ingredients are loaded into the pan")
+	var loaded := lesson.perform_action("load_pan", game.education, 100)
+	_assert(bool(loaded.get("ok", false)) and bool(data.get("cooking_pan_loaded", false)), "Ingredient-loading is a separate required action")
+	var cooked := lesson.perform_action("cook", game.education, 100)
+	_assert(bool(cooked.get("ok", false)), "Cooking becomes available only after ingredients enter the pan")
+
+	# Visuals must show ingredients in the pan and a composed plated dish.
+	game.world.show_cooking_action("load_pan")
+	var hot_station := game.world.get_node("ANIMO_CULINARY_SCHOOL/ANIMO_Workstation_GAREN")
+	_assert(hot_station.has_node("ActionVisual_load_pan"), "Loaded ingredients are visibly placed in the pan")
+	game.world.show_cooking_action("plate")
+	var plate_visual := game.world.get_node("ANIMO_CULINARY_SCHOOL/ANIMO_Workstation_DRESSEREN/ActionVisual_plate")
+	_assert(plate_visual.get_node_or_null("SearedChickenFillet") != null, "Plated dish contains a shaped main ingredient")
+	_assert(plate_visual.get_node_or_null("RoastedPotatoWedge_0") != null, "Plated dish contains potato garnish")
+	_assert(plate_visual.get_node_or_null("GlazedCarrot_0") != null, "Plated dish contains vegetable garnish")
+	_assert(plate_visual.get_node_or_null("PlatedFood_0") == null, "Plating no longer uses coloured food spheres")
+
 	if failures == 0:
 		print("KITCHEN INTERACTION TESTS PASSED")
 		quit(0)
