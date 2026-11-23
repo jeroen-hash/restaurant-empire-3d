@@ -61,6 +61,9 @@ jobs:
       - name: Run restaurant economy tests
         run: godot --headless --path godot --script res://tests/test_economy.gd
 
+      - name: Run culinary school progression tests
+        run: godot --headless --path godot --script res://tests/test_education.gd
+
       - name: Launch main scene headlessly
         run: godot --headless --path godot --quit-after 10
 
