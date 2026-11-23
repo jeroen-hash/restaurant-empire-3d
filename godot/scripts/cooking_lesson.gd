@@ -86,7 +86,7 @@ func perform_action(action: String, education, execution_quality := 100) -> Dict
 
 func get_summary() -> String:
 	var stage := clampi(int(player_data.get("cooking_lesson_stage", 0)), 0, ACTIONS.size() - 1)
-	return "Praktijkopdracht · Stap %d/5 · Kwaliteit %d/100 · Volgende: %s" % [
+	return "Praktijkopdracht · Stap %d/8 · Kwaliteit %d/100 · Volgende: %s" % [
 		stage + 1,
 		int(player_data.get("cooking_lesson_quality", 100)),
 		ACTION_LABELS[ACTIONS[stage]]
