@@ -19,6 +19,7 @@ var world: WorldBuilder
 var clock_accumulator := 0.0
 var autosave_accumulator := 0.0
 var interact_button: Button
+var station_buttons: Dictionary = {}
 var pause_button: Button
 var camera_button: Button
 var credits_dialog: AcceptDialog
@@ -63,19 +64,18 @@ func _process(delta: float) -> void:
 	if player != null:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
-		if is_instance_valid(interact_button):
-			interact_button.visible = true
-			if cooking_challenge_active:
-				interact_button.disabled = false
-				interact_button.text = "STOP OP HET JUISTE MOMENT"
-			else:
-				var station := _get_nearest_cooking_station(p)
-				var in_reach := not station.is_empty() and float(station["distance"]) <= 2.6
-				interact_button.disabled = not in_reach
-				if in_reach:
-					interact_button.text = "WERKPOST · %s" % str(station["button"])
+		for action in station_buttons.keys():
+			var action_button: Button = station_buttons[action]
+			if is_instance_valid(action_button):
+				action_button.visible = true
+				action_button.disabled = false
+				if cooking_challenge_active:
+					action_button.text = "STOP"
 				else:
-					interact_button.text = "LOOP NAAR EEN WERKPOST"
+					var action_station := _get_cooking_station(str(action))
+					var action_distance := float(action_station.get("distance", INF))
+					var short_label := str(action_station.get("button", action)).to_upper()
+					action_button.text = short_label if action_distance > 3.6 else "✓ " + short_label
 
 	# Automatisch bewaren, ook als de speler lang bezig is.
 	autosave_accumulator += delta
@@ -187,20 +187,37 @@ func _build_hud() -> void:
 	exam_button.pressed.connect(_on_take_exam)
 	column.add_child(exam_button)
 
-	interact_button = Button.new()
-	interact_button.name = "KitchenInteractButton"
-	interact_button.text = "LOOP NAAR EEN WERKPOST"
-	interact_button.custom_minimum_size = Vector2(260, 56)
-	interact_button.anchor_left = 1.0
-	interact_button.anchor_right = 1.0
-	interact_button.anchor_top = 1.0
-	interact_button.anchor_bottom = 1.0
-	interact_button.offset_left = -278
-	interact_button.offset_right = -14
-	interact_button.offset_top = -82
-	interact_button.offset_bottom = -18
-	interact_button.pressed.connect(_on_interact_with_kitchen)
-	layer.add_child(interact_button)
+	# Four large, direct touch controls: the player can choose the exact
+	# kitchen action instead of relying on one easily missed contextual button.
+	var station_action_bar := HBoxContainer.new()
+	station_action_bar.name = "KitchenActionBar"
+	station_action_bar.anchor_left = 0.02
+	station_action_bar.anchor_right = 0.98
+	station_action_bar.anchor_top = 1.0
+	station_action_bar.anchor_bottom = 1.0
+	station_action_bar.offset_top = -74
+	station_action_bar.offset_bottom = -10
+	station_action_bar.add_theme_constant_override("separation", 6)
+	layer.add_child(station_action_bar)
+	var station_actions := [
+		{"action": "prepare", "label": "SNIJDEN"},
+		{"action": "cook", "label": "GAREN"},
+		{"action": "season", "label": "KRUIDEN"},
+		{"action": "plate", "label": "DRESSEREN"}
+	]
+	for index in range(station_actions.size()):
+		var station_data: Dictionary = station_actions[index]
+		var action_button := Button.new()
+		action_button.name = "KitchenInteractButton" if index == 0 else "KitchenAction_" + str(station_data["action"])
+		action_button.text = str(station_data["label"])
+		action_button.custom_minimum_size = Vector2(0, 58)
+		action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		action_button.add_theme_font_size_override("font_size", 13)
+		action_button.pressed.connect(_on_station_button.bind(str(station_data["action"])))
+		station_action_bar.add_child(action_button)
+		station_buttons[str(station_data["action"])] = action_button
+		if index == 0:
+			interact_button = action_button
 	cooking_challenge_hint = Label.new()
 	cooking_challenge_hint.text = "TIMINGOEFENING · STOP BIJ 60–76%"
 	cooking_challenge_hint.visible = false
@@ -285,6 +302,14 @@ func _get_nearest_cooking_station(position: Vector3) -> Dictionary:
 	nearest["distance"] = nearest_distance
 	return nearest
 
+func _get_cooking_station(action: String) -> Dictionary:
+	for station in COOKING_STATIONS:
+		if str(station["action"]) == action:
+			var result: Dictionary = station.duplicate()
+			result["distance"] = player.global_position.distance_to(station["position"]) if player != null else INF
+			return result
+	return {}
+
 func _on_interact_with_kitchen() -> void:
 	if player == null:
 		return
@@ -292,12 +317,23 @@ func _on_interact_with_kitchen() -> void:
 		_finish_cooking_challenge()
 		return
 	var station := _get_nearest_cooking_station(player.global_position)
-	if station.is_empty() or float(station["distance"]) > 2.6:
-		message_label.text = "Ga dichter bij een werkpost staan om ermee te werken."
+	if station.is_empty():
+		return
+	_on_station_button(str(station["action"]))
+
+func _on_station_button(action: String) -> void:
+	if player == null:
+		return
+	if cooking_challenge_active:
+		_finish_cooking_challenge()
+		return
+	var station := _get_cooking_station(action)
+	if station.is_empty() or float(station.get("distance", INF)) > 3.6:
+		message_label.text = "Loop naar de werkpost %s en druk daarna op de knop." % str(station.get("button", action)).to_upper()
 		return
 	var next_action := str(cooking_lesson.get_next_action())
-	if str(station["action"]) != next_action:
-		message_label.text = "Dit is de verkeerde werkpost. Volgende stap: %s." % cooking_lesson.get_next_action_label()
+	if action != next_action:
+		message_label.text = "Eerst %s uitvoeren. Ga naar de juiste werkpost." % cooking_lesson.get_next_action_label()
 		return
 	_start_cooking_challenge()
 
