@@ -8,6 +8,7 @@ class_name PlayerController
 @export var mouse_sensitivity := 0.003
 @export var touch_sensitivity := 0.006
 @export var camera_distance := 5.2
+var first_person := false
 
 var camera_yaw := 0.0
 var camera_pitch := -0.12
@@ -51,6 +52,18 @@ func _ready() -> void:
 	camera_pivot.add_child(camera)
 	camera.current = true
 	_build_touch_controls()
+
+func toggle_camera_mode() -> bool:
+	first_person = not first_person
+	if first_person:
+		camera_pivot.position = Vector3(0, 1.62, 0)
+		camera.position = Vector3(0, 0, 0.08)
+		character.visible = false
+	else:
+		camera_pivot.position = Vector3(0, 1.48, 0)
+		camera.position = Vector3(0, 1.45, camera_distance)
+		character.visible = true
+	return first_person
 
 func _mat(color: Color, roughness := 0.78) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
