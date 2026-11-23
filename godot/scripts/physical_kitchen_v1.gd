@@ -170,7 +170,7 @@ func _cut_chicken_on_board() -> void:
 		piece.position = Vector3(-0.18 + float(i % 3) * 0.16, 0.10, -0.08 + float(i / 3) * 0.15)
 		board_area.add_child(piece)
 	chicken_cut = true
-	status_changed.emit("Kip is zichtbaar in stukken gesneden. Dit is nog tijdelijke prototype-art.")
+	status_changed.emit("Kip is zichtbaar in stukken gesneden. Neem de pan van het rek en plaats die op de kookplaat.")
 
 func _place_pan_on_hob() -> void:
 	var pan := held_item
@@ -185,27 +185,26 @@ func _place_pan_on_hob() -> void:
 	held_item = null
 	held_item_id = ""
 	pan_on_hob = true
-	status_changed.emit("Pan staat op de kookplaat. Leg de gesneden kip op de snijplank en neem de pan vast om ze toe te voegen.")
+	status_changed.emit("Pan staat op de kookplaat. Neem de pan vast en richt op de snijplank om de gesneden kip toe te voegen.")
 
 func _load_chicken_into_pan() -> void:
-	if not pan_on_hob or not chicken_cut:
+	if not pan_on_hob or not chicken_cut or chicken_in_pan:
 		return
 	for child in board_area.get_children():
 		if child is MeshInstance3D and child.name.begins_with("TemporaryCutChicken"):
 			child.visible = false
-		var pan_piece := MeshInstance3D.new()
-		pan_piece.name = "TemporaryChickenInPan"
-		var mesh := BoxMesh.new()
-		mesh.size = Vector3(0.24, 0.07, 0.18)
-		pan_piece.mesh = mesh
-		var material := StandardMaterial3D.new()
-		material.albedo_color = Color(0.76, 0.56, 0.42)
-		pan_piece.material_override = material
-		pan_piece.position = Vector3(0.0, 0.24, 0.0)
-		hob_area.add_child(pan_piece)
-		break
+	var pan_piece := MeshInstance3D.new()
+	pan_piece.name = "TemporaryChickenInPan"
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(0.24, 0.07, 0.18)
+	pan_piece.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.76, 0.56, 0.42)
+	pan_piece.material_override = material
+	pan_piece.position = Vector3(0.0, 0.24, 0.0)
+	hob_area.add_child(pan_piece)
 	chicken_in_pan = true
-	status_changed.emit("Kip zit in de pan. Druk opnieuw op de kookplaat om te starten met bakken.")
+	status_changed.emit("Kip zit in de pan. Maak je handen vrij en richt op de kookplaat om te bakken.")
 
 func _start_cooking() -> void:
 	if not chicken_in_pan or chicken_cooked:
@@ -216,7 +215,7 @@ func _start_cooking() -> void:
 			var material := StandardMaterial3D.new()
 			material.albedo_color = Color(0.48, 0.29, 0.17)
 			child.material_override = material
-	status_changed.emit("De kip is gaar in dit prototype. Neem een bord en richt op de pan om te dresseren.")
+	status_changed.emit("De kip is gaar in dit prototype. Neem een bord en richt op de serveerplek om te dresseren.")
 
 func _serve_to_plate() -> void:
 	if not chicken_cooked:
