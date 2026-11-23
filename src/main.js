@@ -471,12 +471,13 @@ function updatePlayer(dt){
   const limit=insideCafe?{x:5.3,zMin:-6.0,zMax:3.75}:{x:27,zMin:5.1,zMax:28};
   playerRoot.position.x=THREE.MathUtils.clamp(playerRoot.position.x,-limit.x,limit.x);
   playerRoot.position.z=THREE.MathUtils.clamp(playerRoot.position.z,limit.zMin,limit.zMax);
-  // Match the avatar's feet to the actual top of the street surfaces.
-  // The sidewalk and curb are 0.19 m above the road; without this step
-  // the lower legs are buried when the player walks onto the pavement.
+  // Keep the character's feet on the visible walking surface.
+  // Cafe floor top (including tile joints) is about 0.05 m; sidewalk
+  // top is 0.19 m; the road top is -0.055 m.
   const absZ=Math.abs(playerRoot.position.z);
   const onSidewalk=absZ>=5.31&&absZ<=9.1;
-  playerRoot.position.y=insideCafe?0:(onSidewalk?.19:0);
+  const groundY=insideCafe?0.055:(onSidewalk?0.19:-0.055);
+  playerRoot.position.y=groundY;
   // Keep the avatar outside the facade unless the cafe has been entered.
   if(!insideCafe&&playerRoot.position.z<5.1)playerRoot.position.z=5.1;
   if(insideCafe&&playerRoot.position.z>3.75)playerRoot.position.z=3.75;
