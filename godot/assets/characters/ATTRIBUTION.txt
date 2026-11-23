@@ -1,0 +1,9 @@
+Character asset attribution
+
+"Casual Man" by vinish.dev
+Source: https://vinish.dev/free-3d-models/
+Asset: https://models.vinish.dev/people/casual-man.glb
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+The web build workflow downloads this asset into godot/assets/characters/casual-man.glb before importing the Godot project.
