@@ -33,6 +33,7 @@ func _ready() -> void:
 	add_child(world)
 
 	player = PlayerControllerScript.new()
+	player.set_character_type(str(GameState.player_data.get("avatar_type", "man")))
 	add_child(player)
 	var saved_position: Dictionary = GameState.player_data.get("position", {"x": -22.0, "y": 0.0, "z": -5.3})
 	player.set_spawn_position(Vector3(
@@ -117,6 +118,19 @@ func _build_hud() -> void:
 	column.add_child(status_label)
 	education_label = Label.new()
 	column.add_child(education_label)
+	var avatar_title := Label.new()
+	avatar_title.text = "KIES JE PERSONAGE"
+	column.add_child(avatar_title)
+	var avatar_row := HBoxContainer.new()
+	column.add_child(avatar_row)
+	var male_button := Button.new()
+	male_button.text = "MAN"
+	male_button.pressed.connect(_on_avatar_selected.bind("man"))
+	avatar_row.add_child(male_button)
+	var female_button := Button.new()
+	female_button.text = "VROUW"
+	female_button.pressed.connect(_on_avatar_selected.bind("woman"))
+	avatar_row.add_child(female_button)
 	cooking_label = Label.new()
 	cooking_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(cooking_label)
@@ -164,6 +178,14 @@ func _build_hud() -> void:
 	save_button.text = "SPEL OPSLAAN"
 	save_button.pressed.connect(_save_now)
 	column.add_child(save_button)
+
+func _on_avatar_selected(avatar_type: String) -> void:
+	if player == null:
+		return
+	GameState.player_data["avatar_type"] = avatar_type
+	player.set_character_type(avatar_type)
+	message_label.text = "Je personage is aangepast."
+	_save_now()
 
 func _on_study_theory() -> void:
 	_apply_study("theory")
