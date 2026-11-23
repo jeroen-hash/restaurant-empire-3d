@@ -39,5 +39,8 @@ jobs:
       - name: Run first- and third-person camera tests
         run: godot --headless --path godot --script res://tests/test_camera.gd
 
+      - name: Run save migration tests
+        run: godot --headless --path godot --script res://tests/test_save_migration.gd
+
       - name: Launch main scene headlessly
         run: godot --headless --path godot --quit-after 10
