@@ -178,142 +178,116 @@ function addFacade(x,z,width,height,kind='residential'){
 
 function makeInterior(){
   const g=new THREE.Group();g.name='cafeInterior';scene.add(g);
-  const oak=new THREE.MeshStandardMaterial({color:'#68452f',roughness:.48});
-  const oakDark=new THREE.MeshStandardMaterial({color:'#35251e',roughness:.42});
-  const walnut=new THREE.MeshStandardMaterial({color:'#4a3025',roughness:.38});
-  const tile=new THREE.MeshStandardMaterial({color:'#b7a995',roughness:.34});
-  const grout=makeMat('#786f63',.92);
-  const brassMetal=new THREE.MeshStandardMaterial({color:'#b08a51',metalness:.78,roughness:.24});
-  const steel=new THREE.MeshStandardMaterial({color:'#89918e',metalness:.82,roughness:.25});
-  const black=makeMat('#171d1d',.28,.28);
-  const upholstery=new THREE.MeshStandardMaterial({color:'#34483e',roughness:.9});
-  const leather=new THREE.MeshStandardMaterial({color:'#754a35',roughness:.78});
-  const cream=makeMat('#e6d9c4',.88);
-  const warmBulb=new THREE.MeshBasicMaterial({color:'#ffd99b'});
-  const floor=makeMat('#8b7760',.38);
-  box(12,.24,11,floor,0,-.08,-4.7,g);
-  // Large stone-look floor tiles with fine grout joints.
-  for(let x=-5.5;x<=5.5;x+=1.1)box(.018,.008,10.7,grout,x,.047,-4.7,g);
-  for(let z=-9.9;z<=.5;z+=1.1)box(11.8,.008,.018,grout,0,.048,z,g);
-  // Warm plaster walls, lower oak wainscoting and a detailed ceiling.
-  box(12,5.65,.28,plaster,0,2.86,-10.1,g);
-  box(.22,5.65,11,plaster,-6,2.86,-4.7,g);
-  box(.22,5.65,11,plaster,6,2.86,-4.7,g);
-  box(12,.2,11,makeMat('#e8dfd0',.86),0,5.68,-4.7,g);
-  box(12,1.05,.08,oakDark,0,.66,-9.91,g);
-  box(.08,1.05,11,oakDark,-5.87,.66,-4.7,g);
-  box(.08,1.05,11,oakDark,5.87,.66,-4.7,g);
-  for(let x=-5.4;x<=5.4;x+=.9)box(.035,.88,.035,oak,x,.66,-9.84,g);
-  box(12,.12,.18,oakDark,0,1.2,-9.86,g);
-  for(const z of [-8.8,-5.2,-1.6])box(.18,.16,11,oakDark,0,5.48,z,g);
-  // Front service counter: paneled oak, stone top, brass foot rail and display glass.
-  box(5.55,1.02,1.12,oakDark,-2.35,.68,-7.85,g);
-  box(5.38,.78,.08,oak,-2.35,.72,-7.26,g);
-  for(let x=-4.8;x<=.1;x+=.82)box(.045,.68,.07,brassMetal,x,.7,-7.19,g);
-  box(5.78,.13,1.34,makeMat('#d6c8b3',.24),-2.35,1.27,-7.85,g);
-  box(5.72,.045,1.28,brassMetal,-2.35,1.19,-7.85,g);
-  box(5.55,.07,.1,cream,-2.35,1.37,-7.85,g);
-  // Glass pastry display on the counter.
-  box(1.65,.62,.68,glass,-4.15,1.72,-7.78,g);
-  for(const x of [-4.95,-3.35])box(.045,.68,.72,brassMetal,x,1.72,-7.78,g);
-  box(1.68,.045,.72,brassMetal,-4.15,2.06,-7.78,g);
-  for(let i=0;i<3;i++){const pastry=cylinder(.12,.13,.06,makeMat('#c99a60'),-4.65+i*.48,1.48,-7.75,g,20);pastry.rotation.x=Math.PI/2}
-  // Back bar cabinetry, illuminated shelves and realistic bottle silhouettes.
-  box(5.8,2.25,.34,oakDark,-2.35,2.38,-9.72,g);
-  box(5.55,.08,.12,brassMetal,-2.35,1.42,-9.49,g);
-  for(let level=0;level<3;level++){
-    const y=1.78+level*.82;
-    box(5.35,.055,.58,oak,-2.35,y,-9.43,g);
-    box(5.35,.025,.04,brassMetal,-2.35,y+.045,-9.12,g);
-    const led=new THREE.PointLight('#ffd5a0',3.5,4,2);led.position.set(-2.35,y-.12,-9.2);g.add(led);
-    for(let n=0;n<8;n++){
-      const x=-4.75+n*.69;
-      const bottleMat=[makeMat('#315143',.22),makeMat('#76513a',.22),makeMat('#263f45',.2)][n%3];
-      cylinder(.085,.105,.32,bottleMat,x,y+.22,-9.42,g,12);
-      cylinder(.035,.035,.12,bottleMat,x,y+.43,-9.42,g,10);
-      cylinder(.09,.09,.035,brassMetal,x,y+.05,-9.42,g,12);
+  const floorMat=new THREE.MeshStandardMaterial({color:'#8a8175',roughness:.34,metalness:.02});
+  const wallMat=new THREE.MeshStandardMaterial({color:'#d7d0c4',roughness:.88});
+  const darkOak=new THREE.MeshStandardMaterial({color:'#342820',roughness:.42});
+  const oak=new THREE.MeshStandardMaterial({color:'#77543b',roughness:.48});
+  const brassMetal=new THREE.MeshStandardMaterial({color:'#a98550',metalness:.72,roughness:.26});
+  const upholstery=new THREE.MeshStandardMaterial({color:'#34483f',roughness:.9});
+  const leather=new THREE.MeshStandardMaterial({color:'#76513d',roughness:.78});
+  const cream=new THREE.MeshStandardMaterial({color:'#e8dfd1',roughness:.84});
+  const warm=new THREE.MeshBasicMaterial({color:'#ffe0b0'});
+  // A clean architectural shell; the service counter and equipment are loaded
+  // from a complete, real-scale GLB asset rather than assembled from boxes.
+  box(12,.24,11,floorMat,0,-.08,-4.7,g);
+  box(12,5.7,.28,wallMat,0,2.86,-10.1,g);
+  box(.22,5.7,11,wallMat,-6,2.86,-4.7,g);
+  box(.22,5.7,11,wallMat,6,2.86,-4.7,g);
+  box(12,.2,11,makeMat('#d8d0c3',.82),0,5.68,-4.7,g);
+  // Dark timber wainscoting and architectural trim.
+  box(12,1.0,.09,darkOak,0,.62,-9.91,g);
+  box(.09,1.0,11,darkOak,-5.87,.62,-4.7,g);
+  box(.09,1.0,11,darkOak,5.87,.62,-4.7,g);
+  box(12,.09,.16,brassMetal,0,1.16,-9.83,g);
+  for(const x of [-5.55,-4.75,-3.95,-3.15,-2.35,-1.55,-.75,.05,.85,1.65,2.45,3.25,4.05,4.85,5.55]){
+    box(.025,.78,.025,oak,x,.62,-9.82,g);
+  }
+  // Street-facing glazing and slim dark metal frames.
+  const frame=makeMat('#242a29',.34,.52);
+  for(const x of [-4.45,-2.25,0,2.25,4.45]){
+    box(1.9,2.35,.10,frame,x,3.18,-.02,g);
+    box(1.72,2.17,.045,glass,x,3.18,.045,g);
+    box(.045,2.17,.07,frame,x,3.18,.08,g);
+    box(1.72,.045,.07,frame,x,3.18,.08,g);
+    box(1.72,.045,.07,frame,x,2.55,.08,g);
+  }
+  // Four dining tables with upholstered bentwood-style chairs.
+  function chair(x,z,angle){
+    const c=new THREE.Group();c.position.set(x,0,z);c.rotation.y=angle;g.add(c);
+    box(.58,.12,.56,leather,0,.52,0,c);
+    box(.58,.68,.12,oak,0,.91,-.23,c);
+    box(.44,.48,.045,upholstery,0,.94,-.16,c);
+    for(const dx of [-.22,.22])for(const dz of [-.2,.2]){
+      const leg=box(.055,.48,.055,darkOak,dx,.25,dz,c);leg.rotation.x=dz*.12;
     }
+    box(.62,.045,.58,oak,0,.6,0,c);
   }
-  // Professional espresso station with group heads, steam wands and grinder.
-  box(1.62,.66,.72,steel,.25,1.78,-8.02,g);
-  box(1.54,.12,.68,black,.25,2.16,-8.02,g);
-  box(1.48,.24,.08,black,.25,1.97,-7.64,g);
-  for(const x of [-.18,.25,.68]){
-    cylinder(.11,.11,.08,brassMetal,x,1.72,-7.62,g,20);
-    cylinder(.025,.025,.32,steel,x,1.51,-7.58,g,10);
+  function table(x,z){
+    cylinder(.56,.56,.095,oak,x,.78,z,g,40);
+    cylinder(.075,.1,.68,darkOak,x,.39,z,g,24);
+    cylinder(.29,.29,.055,darkOak,x,.065,z,g,32);
+    cylinder(.08,.08,.025,brassMetal,x,.835,z,g,20);
+    // A restrained table setting gives the room scale without visual clutter.
+    box(.18,.012,.13,cream,x-.17,.84,z+.12,g);
+    cylinder(.045,.045,.12,cream,x+.18,.9,z-.12,g,18);
   }
-  for(const x of [-.38,.88]){
-    cylinder(.045,.045,.5,steel,x,1.68,-7.66,g,12);
-    const handle=cylinder(.035,.035,.23,black,x,1.39,-7.58,g,10);handle.rotation.z=.4;
-  }
-  box(.38,.52,.42,black,1.35,1.68,-8.02,g);
-  cylinder(.11,.11,.22,steel,1.35,2.05,-8.02,g,20);
-  cylinder(.12,.1,.24,steel,1.35,1.31,-8.02,g,20);
-  // Ceramic cups and small service details on the counter.
-  for(let i=0;i<4;i++){
-    cylinder(.105,.13,.16,cream,-1.25+i*.34,1.51,-7.82,g,20);
-    cylinder(.11,.11,.018,makeMat('#8d7964'),-1.25+i*.34,1.6,-7.82,g,20);
-  }
-  // Seating area: upholstered banquette, wood tables, solid chairs.
-  box(4.5,.78,.62,upholstery,3.55,.58,-8.55,g);
-  box(4.5,.14,.7,leather,3.55,1.0,-8.5,g);
-  box(4.5,1.05,.18,upholstery,3.55,1.55,-8.82,g);
-  for(let x=1.45;x<=5.65;x+=1.4)box(.055,.95,.08,oakDark,x,.55,-8.14,g);
-  function addChair(x,z,rot=0){
-    const chair=new THREE.Group();chair.position.set(x,0,z);chair.rotation.y=rot;g.add(chair);
-    box(.68,.13,.68,leather,0,.56,0,chair);
-    box(.68,.72,.13,oakDark,0,.98,-.28,chair);
-    box(.54,.5,.045,leather,0,1.0,-.2,chair);
-    for(const dx of [-.25,.25])for(const dz of [-.24,.24])box(.065,.52,.065,oakDark,dx,.28,dz,chair);
-    box(.82,.07,.82,oak,0,.65,0,chair);
-  }
-  function addTable(x,z,r=.64){
-    cylinder(r,r,.11,oak,x,1.02,z,g,40);
-    cylinder(.11,.14,.88,black,x,.49,z,g,20);
-    cylinder(.34,.34,.07,black,x,.09,z,g,24);
-    cylinder(.095,.095,.035,brassMetal,x,1.09,z,g,20);
-    // Table setting: folded napkin and small vase.
-    box(.22,.018,.16,cream,x-.19,1.09,z+.12,g);
-    cylinder(.045,.1,.12,makeMat('#d2c2a7'),x+.2,1.17,z-.13,g,16);
-    sphere(.075,makeMat('#668064'),x+.2,1.29,z-.13,g);
-  }
-  addTable(2.45,-5.85,.68);addChair(1.5,-5.85,Math.PI/2);addChair(3.35,-5.85,-Math.PI/2);
-  addTable(4.2,-3.65,.58);addChair(4.2,-2.75,Math.PI);addChair(4.2,-4.55,0);
-  addTable(2.3,-2.65,.54);addChair(1.45,-2.65,Math.PI/2);addChair(3.15,-2.65,-Math.PI/2);
-  // Framed menu boards with clear ANIMO identity.
-  box(2.45,1.65,.14,oakDark,3.62,3.62,-9.82,g);
-  box(2.27,1.47,.05,black,3.62,3.62,-9.72,g);
-  const menu=createSign('ANIMO MENU',2.0,.48);menu.position.set(3.62,4.05,-9.67);g.add(menu);
-  // Wall art, brass picture rails and potted greenery.
-  box(1.45,1.05,.08,oakDark,-4.55,3.5,-9.82,g);
-  const art=createSign('KOFFIE',1.2,.5);art.position.set(-4.55,3.52,-9.74);g.add(art);
-  for(const [x,z] of [[-5,-2.1],[5.35,-7.1],[5.25,-1.7]]){
-    cylinder(.32,.4,.58,makeMat('#9b8063'),x,.34,z,g,24);
+  table(-3.55,-3.35);chair(-4.35,-3.35,Math.PI/2);chair(-2.75,-3.35,-Math.PI/2);
+  table(3.55,-3.35);chair(2.75,-3.35,Math.PI/2);chair(4.35,-3.35,-Math.PI/2);
+  table(-3.55,-6.0);chair(-4.35,-6.0,Math.PI/2);chair(-2.75,-6.0,-Math.PI/2);
+  table(3.55,-6.0);chair(2.75,-6.0,Math.PI/2);chair(4.35,-6.0,-Math.PI/2);
+  // Wall art, plants and warm pendant lighting.
+  box(1.45,1.0,.08,darkOak,-4.7,3.5,-9.82,g);
+  box(1.28,.83,.035,makeMat('#26312e',.72),-4.7,3.5,-9.76,g);
+  for(const [x,z] of [[-5.15,-1.3],[5.15,-1.3],[-5.15,-7.9],[5.15,-7.9]]){
+    cylinder(.27,.33,.48,makeMat('#8b765e',.9),x,.24,z,g,24);
     for(let n=0;n<7;n++){
       const a=n*Math.PI*2/7;
-      const leaf=sphere(.16,makeMat('#45654d'),x+Math.cos(a)*.23,.75+(n%2)*.13,z+Math.sin(a)*.23,g);
-      leaf.scale.set(.75,1.7,.7);
+      const leaf=sphere(.12,makeMat('#45634d',.95),x+Math.cos(a)*.18,.58+(n%2)*.12,z+Math.sin(a)*.18,g);
+      leaf.scale.set(.7,1.7,.65);
     }
   }
-  // Pendant lights with brass fittings and warm pools of light.
-  for(const [x,z] of [[-2.4,-5.4],[2.3,-5.1],[4.1,-2.8]]){
-    cylinder(.025,.025,.75,brassMetal,x,5.05,z,g,10);
-    cylinder(.24,.12,.16,brassMetal,x,4.62,z,g,24);
-    sphere(.12,warmBulb,x,4.5,z,g);
-    const light=new THREE.PointLight('#ffd3a0',11,7,2);light.position.set(x,4.48,z);g.add(light);
+  for(const [x,z] of [[-3.4,-2.2],[0,-2.2],[3.4,-2.2],[-3.4,-5.0],[3.4,-5.0]]){
+    cylinder(.022,.022,.78,brassMetal,x,5.15,z,g,10);
+    cylinder(.24,.12,.16,darkOak,x,4.72,z,g,24);
+    sphere(.1,warm,x,4.6,z,g);
+    const lamp=new THREE.PointLight('#ffd5a4',8,6,2);lamp.position.set(x,4.55,z);g.add(lamp);
   }
-  // Recessed ceiling spots and discreet wall sconces.
-  for(const x of [-4.7,-1.6,1.6,4.7])for(const z of [-8.8,-5.2,-1.7]){
-    const spot=new THREE.PointLight('#fff0d6',2.3,3.5,2);spot.position.set(x,5.45,z);g.add(spot);
-    cylinder(.095,.095,.035,brassMetal,x,5.56,z,g,16);
-  }
-  for(const x of [-5.75,5.75]){
-    box(.12,.62,.18,brassMetal,x,3.05,-4.6,g);
-    sphere(.12,warmBulb,x,3.05,-4.48,g);
-    const sconce=new THREE.PointLight('#ffdda9',2.5,3,2);sconce.position.set(x*.94,3.05,-4.3);g.add(sconce);
+  for(const x of [-4.8,-1.6,1.6,4.8])for(const z of [-8.7,-5.3,-1.8]){
+    const spot=new THREE.PointLight('#fff0d8',1.6,3.2,2);spot.position.set(x,5.45,z);g.add(spot);
   }
   g.visible=false;
   return g;
+}
+
+async function loadCafeBar(){
+  const url='https://cdn.3dassets.dev/assets/22245/v1/model.glb';
+  try{
+    setStatus('Echte horeca-apparatuur laden…');
+    const gltf=await gltfLoader.loadAsync(url);
+    const model=gltf.scene;
+    model.updateMatrixWorld(true);
+    const bounds=new THREE.Box3().setFromObject(model);
+    const center=bounds.getCenter(new THREE.Vector3());
+    const size=bounds.getSize(new THREE.Vector3());
+    if(!Number.isFinite(size.x)||size.x<1||size.y<.5||size.z<1)throw new Error('Het café-bar model heeft ongeldige afmetingen');
+    model.position.set(-center.x,-bounds.min.y,-7.55-center.z);
+    model.traverse(o=>{
+      if(o.isMesh){
+        o.castShadow=true;o.receiveShadow=true;
+        if(o.material){
+          const materials=Array.isArray(o.material)?o.material:[o.material];
+          for(const m of materials){m.envMapIntensity=1.1;if(m.map)m.map.colorSpace=THREE.SRGBColorSpace}
+        }
+      }
+    });
+    worldParts.cafeInside.add(model);
+    model.name='ANIMO_REAL_CAFE_BAR';
+    return true;
+  }catch(error){
+    console.error('Echte café-bar kon niet worden geladen:',error);
+    setStatus('Café-apparatuur niet geladen: '+(error?.message||String(error)));
+    return false;
+  }
 }
 
 function buildWorld(){
@@ -652,9 +626,10 @@ async function start(){
   try{
     worldParts=buildWorld();bindControls();
     loadingText.textContent='Materialen en licht worden geladen…';
-    const [lighting,character]=await Promise.all([loadLighting(),loadCharacter()]);
-    if(character)setStatus('3D-wereld klaar · personage geladen');
+    const [lighting,character,cafeBar]=await Promise.all([loadLighting(),loadCharacter(),loadCafeBar()]);
+    if(character&&cafeBar)setStatus('3D-wereld klaar · echte café-apparatuur geladen');
     if(!character)toast('Personage niet geladen. Controleer de internetverbinding.');
+    if(!cafeBar)toast('De nieuwe café-apparatuur kon niet worden geladen.');
     loading.classList.add('hidden');
     frame();
   }catch(e){
