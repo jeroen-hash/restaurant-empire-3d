@@ -37,7 +37,9 @@ func _ready() -> void:
 	player = PlayerControllerScript.new()
 	player.set_character_type(str(GameState.player_data.get("avatar_type", "man")))
 	add_child(player)
-	var saved_position: Dictionary = GameState.player_data.get("position", {"x": -22.0, "y": 0.0, "z": -5.3})
+	var saved_position: Dictionary = GameState.player_data.get("position", {"x": -25.0, "y": 0.0, "z": -5.0})
+	if is_equal_approx(float(saved_position.get("x", -25.0)), -22.0) and is_equal_approx(float(saved_position.get("z", -5.0)), -5.3):
+		saved_position = {"x": -25.0, "y": 0.0, "z": -5.0}
 	player.set_spawn_position(Vector3(
 		float(saved_position.get("x", 0.0)),
 		float(saved_position.get("y", 0.0)),
@@ -107,11 +109,15 @@ func _build_hud() -> void:
 	layer.name = "HUD"
 	add_child(layer)
 	var panel := PanelContainer.new()
-	panel.position = Vector2(18, 18)
-	panel.custom_minimum_size = Vector2(300, 74)
+	panel.position = Vector2(10, 10)
+	panel.custom_minimum_size = Vector2(280, 190)
 	layer.add_child(panel)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(260, 180)
+	panel.add_child(scroll)
 	var column := VBoxContainer.new()
-	panel.add_child(column)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(column)
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	var title := Label.new()
 	title.text = "ANIMO  ·  RESTAURANT EMPIRE 3D"
