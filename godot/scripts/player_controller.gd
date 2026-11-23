@@ -385,10 +385,10 @@ func _build_touch_controls() -> void:
 	var move_label := Label.new()
 	move_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	move_label.text = "BEWEGEN"
-	move_label.position = base.position + Vector2(36, 134)
+	move_label.position = Vector2(36, 134)
 	move_label.add_theme_font_size_override("font_size", 13)
 	move_label.add_theme_color_override("font_color", Color(0.95, 0.91, 0.82, 0.88))
-	layer.add_child(move_label)
+	base.add_child(move_label)
 
 	var look_label := Label.new()
 	look_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
