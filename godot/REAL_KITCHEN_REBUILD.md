@@ -64,3 +64,15 @@ Do not call the slice complete until:
 - a human playtest confirms the complete sequence, not just a unit test.
 
 Automated tests are useful but do not replace a real visual and input playtest.
+
+
+## Implementation progress — physical interaction prototype
+
+The new `scripts/physical_kitchen_v1.gd` module is now connected to the culinary-school scene through `main.gd`. It introduces a first raycast-based physical interaction loop:
+- Take a stocked ingredient from the storage proxy; stock count decreases only on pickup.
+- Carry the ingredient attached to the character's right-hand anchor.
+- Aim at the cutting-board interaction surface and place the ingredient down.
+- Pick up the knife as a separate held object.
+- Use the knife at the board to replace the whole chicken proxy with visible cut-piece proxies.
+
+**Important status:** this is an early interaction prototype, not an accepted playable build. The ingredient, knife, board and storage visuals are temporary primitive blockout meshes. The imported professional kitchen remains the environment model. Final food/tool models, robust placement/return rules, cutting animation, pan/hob cooking, plating, mobile controls for the interaction action, and Godot runtime validation are still outstanding. Do not describe this prototype as finished or iPhone-tested.
