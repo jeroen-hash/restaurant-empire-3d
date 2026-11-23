@@ -265,7 +265,8 @@ func _build_touch_controls() -> void:
 
 	var base := Panel.new()
 	base.name = "MoveJoystickBase"
-	base.position = Vector2(24, get_viewport().get_visible_rect().size.y - 164)
+	var viewport_size := get_viewport().get_visible_rect().size
+	base.position = Vector2(viewport_size.x * 0.23 - 66.0, viewport_size.y * 0.78 - 66.0)
 	base.size = Vector2(132, 132)
 	var base_style := StyleBoxFlat.new()
 	base_style.bg_color = Color(0.08, 0.10, 0.09, 0.34)
@@ -289,7 +290,7 @@ func _build_touch_controls() -> void:
 
 	var move_label := Label.new()
 	move_label.text = "BEWEGEN"
-	move_label.position = Vector2(38, 136)
+	move_label.position = base.position + Vector2(36, 134)
 	move_label.add_theme_font_size_override("font_size", 13)
 	move_label.add_theme_color_override("font_color", Color(0.95, 0.91, 0.82, 0.88))
 	layer.add_child(move_label)
