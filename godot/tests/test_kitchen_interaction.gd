@@ -30,6 +30,9 @@ func _run_tests() -> void:
 	# Validate the recipe sequence: cutting alone is not enough to start cooking.
 	var data := {"cooking_lesson_stage": 0, "cooking_lesson_quality": 100, "cooking_lessons_completed": 0}
 	var lesson_script = load("res://scripts/cooking_lesson.gd")
+	var migrated_data := {"cooking_lesson_stage": 2}
+	lesson_script.new(migrated_data)
+	_assert(int(migrated_data.get("cooking_lesson_stage", -1)) == 3, "Existing lesson progress migrates without skipping pan loading")
 	var lesson = lesson_script.new(data)
 	var blocked := lesson.perform_action("cook", game.education, 100)
 	_assert(not bool(blocked.get("ok", false)), "Cooking cannot start before the preparation and pan-loading steps")
