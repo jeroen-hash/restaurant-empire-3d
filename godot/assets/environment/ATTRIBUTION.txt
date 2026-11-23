@@ -1,0 +1,13 @@
+Restaurant environment asset attribution
+
+Both assets are original Innerscene models released under CC0 1.0 (public domain dedication), allowing commercial use, modification and redistribution without attribution.
+
+1. Restaurant service station
+Page: https://www.innerscene.com/tools/library/3d-parts/restaurant-service-station-c9b08fa4
+File: restaurant-service-station.glb
+
+2. Restaurant 2-top table set
+Page: https://www.innerscene.com/tools/library/3d-parts/restaurant-2-top-table-set-49d30711
+File: restaurant-2-top-table-set.glb
+
+The web build workflow downloads both GLB files into godot/assets/environment/ before importing the Godot project.
