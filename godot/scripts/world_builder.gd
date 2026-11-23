@@ -378,3 +378,47 @@ func set_game_time(minutes: int) -> void:
 	sun_light.rotation_degrees.x = cos(phase) * 68.0
 	sun_light.light_energy = lerpf(0.10, 1.05, daylight)
 	world_environment.environment.ambient_light_energy = lerpf(0.18, 0.72, daylight)
+
+
+func show_cooking_action(action: String) -> void:
+	var school := get_node_or_null("ANIMO_CULINARY_SCHOOL")
+	if school == null:
+		return
+	var station_names := {
+		"prepare": "ANIMO_Workstation_SNIJDEN",
+		"cook": "ANIMO_Workstation_GAREN",
+		"season": "ANIMO_Workstation_KRUIDEN",
+		"plate": "ANIMO_Workstation_DRESSEREN"
+	}
+	var station := school.get_node_or_null(str(station_names.get(action, "")))
+	if station == null:
+		return
+	var visual_name := "ActionVisual_" + action
+	if station.has_node(visual_name):
+		return
+	var visual := Node3D.new()
+	visual.name = visual_name
+	station.add_child(visual)
+	if action == "prepare":
+		for i in range(7):
+			var piece := _sphere(visual, "ChoppedVegetable_%02d" % i, Vector3(-0.24 + float(i % 4) * 0.15, 1.12, -0.12 + float(i / 4) * 0.16), 0.055, Color(0.72, 0.28, 0.12) if i % 2 == 0 else Color(0.43, 0.62, 0.20))
+			piece.scale = Vector3(1.0, 0.55, 0.8)
+	elif action == "cook":
+		var heat := OmniLight3D.new()
+		heat.name = "VisibleCookingHeat"
+		heat.position = Vector3(0, 1.25, 0)
+		heat.light_color = Color(1.0, 0.28, 0.06)
+		heat.light_energy = 1.1
+		heat.omni_range = 2.2
+		visual.add_child(heat)
+		var steam := _sphere(visual, "CookingSteam", Vector3(0, 1.48, 0), 0.10, Color(0.86, 0.89, 0.88))
+		steam.transparency = 0.38
+		steam.scale = Vector3(0.65, 1.8, 0.65)
+	elif action == "season":
+		for i in range(12):
+			var spice := _sphere(visual, "Seasoning_%02d" % i, Vector3(-0.42 + float(i % 4) * 0.27, 1.19 + float(i % 3) * 0.035, -0.12 + float(i / 4) * 0.13), 0.025, Color(0.76, 0.56, 0.20) if i % 2 == 0 else Color(0.34, 0.43, 0.20))
+			spice.scale = Vector3(1.0, 0.45, 1.0)
+	elif action == "plate":
+		for i in range(5):
+			var food := _sphere(visual, "PlatedFood_%02d" % i, Vector3(-0.13 + float(i % 3) * 0.13, 1.16, -0.10 + float(i / 3) * 0.14), 0.085, Color(0.62, 0.25, 0.10) if i % 2 == 0 else Color(0.42, 0.58, 0.20))
+			food.scale = Vector3(1.25, 0.48, 0.85)
