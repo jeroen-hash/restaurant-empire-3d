@@ -476,7 +476,7 @@ function updatePlayer(dt){
   // top is 0.19 m; the road top is -0.055 m.
   const absZ=Math.abs(playerRoot.position.z);
   const onSidewalk=absZ>=5.31&&absZ<=9.1;
-  const groundY=insideCafe?0.055:(onSidewalk?0.19:-0.055);
+  const groundY=insideCafe?0.22:(onSidewalk?0.19:-0.055);
   playerRoot.position.y=groundY;
   // Keep the avatar outside the facade unless the cafe has been entered.
   if(!insideCafe&&playerRoot.position.z<5.1)playerRoot.position.z=5.1;
