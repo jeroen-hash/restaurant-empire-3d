@@ -382,6 +382,15 @@ func set_game_time(minutes: int) -> void:
 
 func show_cooking_action(action: String) -> void:
 	var school := get_node_or_null("ANIMO_CULINARY_SCHOOL")
+	if action == "prepare" and school != null:
+		# Start each practical lesson with clean worktops.
+		for old_station_name in ["ANIMO_Workstation_SNIJDEN", "ANIMO_Workstation_GAREN", "ANIMO_Workstation_KRUIDEN", "ANIMO_Workstation_DRESSEREN"]:
+			var old_station := school.get_node_or_null(old_station_name)
+			if old_station != null:
+				for child in old_station.get_children():
+					if child.name.begins_with("ActionVisual_"):
+						old_station.remove_child(child)
+						child.queue_free()
 	if school == null:
 		return
 	var station_names := {
