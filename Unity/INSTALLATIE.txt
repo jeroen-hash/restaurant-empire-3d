@@ -1,0 +1,30 @@
+RESTAURANT EMPIRE 3D — UNITY 6.6
+Eerste besturingspakket
+
+INHOUD
+- Assets/Scripts/PlayerMovement.cs
+  Beweging met de vier pijltjestoetsen.
+- Assets/Scripts/CameraFollow.cs
+  Camera volgt de speler.
+
+INSTALLATIE
+1. Stop Play Mode in Unity.
+2. Maak een kopie van je map RestaurantEmpire3D_Unity als reserve.
+3. Download de ZIP via Code > Download ZIP in GitHub.
+4. Pak de ZIP uit.
+5. Open de map Unity in deze ZIP.
+6. Kopieer de map Assets naar de hoofdmap van je Unity-project.
+   De scripts komen dan in Assets/Scripts.
+7. Ga terug naar Unity en wacht tot de scripts geïmporteerd zijn.
+
+CONTROLE IN UNITY
+- Selecteer Player in Hierarchy.
+- Controleer dat Character Controller en Player Movement op Player staan.
+- Selecteer Main Camera.
+- Controleer dat Camera Follow op Main Camera staat.
+- Sleep Player naar het Target-vak van Camera Follow als dat veld leeg is.
+- Klik in het Game-venster en gebruik de pijltjestoetsen.
+
+LET OP
+Dit pakket bevat de besturingsscripts en installatie-instructies.
+Het is geen volledige game, geen afgewerkte keuken en bevat nog geen realistische 3D-personages.
