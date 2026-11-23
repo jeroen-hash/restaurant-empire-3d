@@ -66,6 +66,14 @@ func perform_action(action: String, education) -> Dictionary:
 		"message": "Praktijkopdracht geslaagd! Kwaliteit: %d/100. Je praktijkvaardigheid stijgt." % quality
 	}
 
+func get_summary() -> String:
+	var stage := clampi(int(player_data.get("cooking_lesson_stage", 0)), 0, ACTIONS.size() - 1)
+	return "Praktijkopdracht · Stap %d/4 · Kwaliteit %d/100 · Volgende: %s" % [
+		stage + 1,
+		int(player_data.get("cooking_lesson_quality", 100)),
+		ACTION_LABELS[ACTIONS[stage]]
+	]
+
 func get_next_action_label() -> String:
 	var stage := clampi(int(player_data.get("cooking_lesson_stage", 0)), 0, ACTIONS.size() - 1)
 	return ACTION_LABELS[ACTIONS[stage]]
