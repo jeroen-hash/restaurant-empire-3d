@@ -21,6 +21,7 @@ var autosave_accumulator := 0.0
 var interact_button: Button
 var pause_button: Button
 var camera_button: Button
+var credits_dialog: AcceptDialog
 var game_paused := false
 
 func _ready() -> void:
@@ -179,6 +180,15 @@ func _build_hud() -> void:
 	pause_button.pressed.connect(_toggle_pause)
 	column.add_child(pause_button)
 
+	credits_dialog = AcceptDialog.new()
+	credits_dialog.title = "CREDITS & LICENTIES"
+	credits_dialog.dialog_text = "Casual Man en Casual Woman — vinish.dev (https://vinish.dev/free-3d-models/), CC BY 4.0.\n\nRestaurantinterieur, restaurantmeubilair en service station — Innerscene, CC0 1.0.\n\nProfessionele opleidingskeuken — 3DAssets.dev, CC0 1.0."
+	layer.add_child(credits_dialog)
+	var credits_button := Button.new()
+	credits_button.text = "CREDITS & LICENTIES"
+	credits_button.pressed.connect(_show_credits)
+	column.add_child(credits_button)
+
 	save_label = Label.new()
 	save_label.text = "BEWEGEN: joystick / WASD · CAMERA: rechts slepen"
 	column.add_child(save_label)
@@ -258,6 +268,10 @@ func _refresh_education_ui() -> void:
 		education_label.text = education.get_summary()
 	if is_instance_valid(cooking_label):
 		cooking_label.text = cooking_lesson.get_summary()
+
+func _show_credits() -> void:
+	if is_instance_valid(credits_dialog):
+		credits_dialog.popup_centered()
 
 func _toggle_camera() -> void:
 	if player == null:
