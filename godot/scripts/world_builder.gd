@@ -440,25 +440,60 @@ func show_cooking_action(action: String) -> void:
 	elif action == "season":
 		for i in range(4):
 			var spice := _box(visual, "Seasoning_%02d" % i, Vector3(-0.18 + float(i) * 0.12, 1.20, -0.08 + float(i % 2) * 0.12), Vector3(0.055, 0.025, 0.055), Color(0.76, 0.56, 0.20) if i % 2 == 0 else Color(0.34, 0.43, 0.20), false)
-	elif action == "plate":
-		# A composed dish made from shaped food meshes, not coloured decorative balls.
-		var steak := MeshInstance3D.new()
-		steak.name = "SearedChickenFillet"
-		var steak_mesh := CapsuleMesh.new()
-		steak_mesh.radius = 0.115
-		steak_mesh.height = 0.34
-		steak.mesh = steak_mesh
-		steak.position = Vector3(-0.09, 1.19, -0.04)
-		steak.rotation_degrees = Vector3(0, 0, 90)
-		steak.scale = Vector3(1.0, 0.72, 0.52)
-		steak.material_override = _material(Color(0.48, 0.24, 0.12), 0.48)
-		visual.add_child(steak)
-		for i in range(3):
-			var potato := _box(visual, "RoastedPotatoWedge_%02d" % i, Vector3(0.12 + float(i) * 0.045, 1.18, -0.16 + float(i) * 0.13), Vector3(0.15, 0.07, 0.075), Color(0.78, 0.62, 0.32), false)
-			potato.rotation.y = -0.25 + float(i) * 0.25
-		for i in range(3):
-			var carrot := _cylinder(visual, "GlazedCarrot_%02d" % i, Vector3(-0.16 + float(i) * 0.11, 1.18, 0.18), 0.035, 0.13, Color(0.88, 0.32, 0.07), 12)
-			carrot.rotation.z = PI * 0.5
-		for i in range(2):
-			var broccoli_stem := _cylinder(visual, "BroccoliStem_%02d" % i, Vector3(0.18, 1.20, 0.08 + float(i) * 0.10), 0.035, 0.11, Color(0.25, 0.42, 0.16), 10)
-			broccoli_stem.rotation.z = PI * 0.5
+	elif action.begins_with("plate_"):
+		var plate_station := station
+		if not plate_station.has_node("ActionVisual_plate_main"):
+			var base := Node3D.new()
+			base.name = "ActionVisual_plate_main"
+			plate_station.add_child(base)
+			# White ceramic plate with a raised rim, clearly visible from the player camera.
+			var plate_center := _cylinder(base, "CeramicPlate", Vector3(0, 1.08, 0), 0.34, 0.045, Color(0.94, 0.93, 0.88), 48)
+			var plate_rim := MeshInstance3D.new()
+			plate_rim.name = "CeramicPlateRim"
+			var rim_mesh := TorusMesh.new()
+			rim_mesh.inner_radius = 0.29
+			rim_mesh.outer_radius = 0.34
+			plate_rim.mesh = rim_mesh
+			plate_rim.position = Vector3(0, 1.11, 0)
+			plate_rim.material_override = _material(Color(0.98, 0.97, 0.93), 0.22)
+			base.add_child(plate_rim)
+		if action == "plate_main":
+			var main_food := Node3D.new()
+			main_food.name = "ActionVisual_plate_main"
+			station.add_child(main_food)
+			var steak := MeshInstance3D.new()
+			steak.name = "SearedChickenFillet"
+			var steak_mesh := CapsuleMesh.new()
+			steak_mesh.radius = 0.115
+			steak_mesh.height = 0.34
+			steak.mesh = steak_mesh
+			steak.position = Vector3(-0.09, 1.19, -0.04)
+			steak.rotation_degrees = Vector3(0, 0, 90)
+			steak.scale = Vector3(1.0, 0.72, 0.52)
+			steak.material_override = _material(Color(0.48, 0.24, 0.12), 0.48)
+			main_food.add_child(steak)
+		elif action == "plate_side":
+			var side := Node3D.new()
+			side.name = "ActionVisual_plate_side"
+			station.add_child(side)
+			for i in range(3):
+				var potato := _box(side, "RoastedPotatoWedge_%02d" % i, Vector3(0.12 + float(i) * 0.045, 1.18, -0.16 + float(i) * 0.13), Vector3(0.15, 0.07, 0.075), Color(0.78, 0.62, 0.32), false)
+				potato.rotation.y = -0.25 + float(i) * 0.25
+		elif action == "plate_veg":
+			var vegetables := Node3D.new()
+			vegetables.name = "ActionVisual_plate_veg"
+			station.add_child(vegetables)
+			for i in range(3):
+				var carrot := _cylinder(vegetables, "GlazedCarrot_%02d" % i, Vector3(-0.16 + float(i) * 0.11, 1.18, 0.18), 0.035, 0.13, Color(0.88, 0.32, 0.07), 12)
+				carrot.rotation.z = PI * 0.5
+			for i in range(2):
+				var broccoli := _cylinder(vegetables, "BroccoliStem_%02d" % i, Vector3(0.18, 1.20, 0.08 + float(i) * 0.10), 0.035, 0.11, Color(0.25, 0.42, 0.16), 10)
+				broccoli.rotation.z = PI * 0.5
+		elif action == "plate_finish":
+			var finish := Node3D.new()
+			finish.name = "ActionVisual_plate_finish"
+			station.add_child(finish)
+			var sauce := _cylinder(finish, "SauceSwipe", Vector3(0.02, 1.145, 0.18), 0.045, 0.22, Color(0.55, 0.16, 0.08), 24)
+			sauce.rotation.z = PI * 0.5
+			var herb := _box(finish, "FreshHerbGarnish", Vector3(-0.18, 1.205, 0.02), Vector3(0.10, 0.012, 0.045), Color(0.22, 0.42, 0.16), false)
+
