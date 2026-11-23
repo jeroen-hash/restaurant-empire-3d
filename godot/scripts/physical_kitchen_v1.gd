@@ -18,6 +18,13 @@ var board_area: Area3D
 var board_has_ingredient := false
 var chicken_cut := false
 var knife_taken := false
+var hob_area: Area3D
+var pan_area: Area3D
+var plate_area: Area3D
+var pan_on_hob := false
+var chicken_in_pan := false
+var chicken_cooked := false
+var plated := false
 
 func _ready() -> void:
 	name = "PhysicalKitchenV1"
@@ -40,11 +47,23 @@ func handle_interaction() -> bool:
 		return false
 	var hit := _camera_hit()
 	if is_instance_valid(held_item):
+		if hit.has("collider") and hit.collider == hob_area and held_item_id == "pan":
+			_place_pan_on_hob()
+			return true
 		if hit.has("collider") and hit.collider == board_area and held_item_id == "chicken":
 			_place_chicken_on_board()
 			return true
 		if hit.has("collider") and hit.collider == board_area and held_item_id == "knife" and board_has_ingredient and not chicken_cut:
 			_cut_chicken_on_board()
+			return true
+		if hit.has("collider") and hit.collider == hob_area and held_item_id == "":
+			_start_cooking()
+			return true
+		if hit.has("collider") and hit.collider == board_area and held_item_id == "pan" and chicken_cut and not chicken_in_pan:
+			_load_chicken_into_pan()
+			return true
+		if hit.has("collider") and hit.collider == plate_area and held_item_id == "plate" and chicken_cooked:
+			_serve_to_plate()
 			return true
 		if hit.has("collider") and str(hit.collider.get_meta("item_id", "")) == "knife":
 			return true
@@ -58,8 +77,9 @@ func handle_interaction() -> bool:
 	var item_id := str(target.get_meta("item_id", ""))
 	if item_id == "":
 		return false
-	if item_id == "knife":
-		knife_taken = true
+	if item_id in ["knife", "pan", "plate"]:
+		if item_id == "knife":
+			knife_taken = true
 		_pickup(target, item_id)
 		return true
 	if item_id in ["chicken", "carrot", "potato"] and int(stock.get(item_id, 0)) > 0:
@@ -152,6 +172,79 @@ func _cut_chicken_on_board() -> void:
 	chicken_cut = true
 	status_changed.emit("Kip is zichtbaar in stukken gesneden. Dit is nog tijdelijke prototype-art.")
 
+func _place_pan_on_hob() -> void:
+	var pan := held_item
+	hand_anchor.remove_child(pan)
+	hob_area.add_child(pan)
+	pan.transform = Transform3D.IDENTITY
+	pan.position = Vector3(0.0, 0.16, 0.0)
+	if pan is RigidBody3D:
+		(pan as RigidBody3D).collision_layer = 0
+		(pan as RigidBody3D).collision_mask = 0
+	pan_area = hob_area
+	held_item = null
+	held_item_id = ""
+	pan_on_hob = true
+	status_changed.emit("Pan staat op de kookplaat. Leg de gesneden kip op de snijplank en neem de pan vast om ze toe te voegen.")
+
+func _load_chicken_into_pan() -> void:
+	if not pan_on_hob or not chicken_cut:
+		return
+	for child in board_area.get_children():
+		if child is MeshInstance3D and child.name.begins_with("TemporaryCutChicken"):
+			child.visible = false
+		var pan_piece := MeshInstance3D.new()
+		pan_piece.name = "TemporaryChickenInPan"
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(0.24, 0.07, 0.18)
+		pan_piece.mesh = mesh
+		var material := StandardMaterial3D.new()
+		material.albedo_color = Color(0.76, 0.56, 0.42)
+		pan_piece.material_override = material
+		pan_piece.position = Vector3(0.0, 0.24, 0.0)
+		hob_area.add_child(pan_piece)
+		break
+	chicken_in_pan = true
+	status_changed.emit("Kip zit in de pan. Druk opnieuw op de kookplaat om te starten met bakken.")
+
+func _start_cooking() -> void:
+	if not chicken_in_pan or chicken_cooked:
+		return
+	chicken_cooked = true
+	for child in hob_area.get_children():
+		if child is MeshInstance3D and child.name == "TemporaryChickenInPan":
+			var material := StandardMaterial3D.new()
+			material.albedo_color = Color(0.48, 0.29, 0.17)
+			child.material_override = material
+	status_changed.emit("De kip is gaar in dit prototype. Neem een bord en richt op de pan om te dresseren.")
+
+func _serve_to_plate() -> void:
+	if not chicken_cooked:
+		return
+	var plate := held_item
+	hand_anchor.remove_child(plate)
+	plate_area.add_child(plate)
+	plate.transform = Transform3D.IDENTITY
+	plate.position = Vector3(0.0, 0.12, 0.0)
+	if plate is RigidBody3D:
+		(plate as RigidBody3D).collision_layer = 0
+		(plate as RigidBody3D).collision_mask = 0
+	var serving := MeshInstance3D.new()
+	serving.name = "TemporaryPlatedChicken"
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.12
+	mesh.height = 0.07
+	serving.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.52, 0.32, 0.20)
+	serving.material_override = material
+	serving.position = Vector3(0.0, 0.19, 0.0)
+	plate_area.add_child(serving)
+	held_item = null
+	held_item_id = ""
+	plated = true
+	status_changed.emit("Gerecht is op het bord gezet. Eerste fysieke kook- en serveerflow voltooid (prototype).")
+
 func _build_blockout() -> void:
 	# Layout uses the imported professional kitchen as its visual background.
 	# These small meshes are deliberately marked as temporary interaction proxies.
@@ -165,6 +258,10 @@ func _build_blockout() -> void:
 	board_area.set_meta("item_id", "board")
 	_make_station("Messenrek", Vector3(-1.0, 1.45, 1.0), Vector3(0.8, 0.65, 0.12), Color(0.25, 0.27, 0.27))
 	_add_item("knife", Vector3(-1.0, 1.85, 1.0), Color(0.72, 0.75, 0.77), Vector3(0.38, 0.035, 0.055))
+	_add_item("pan", Vector3(0.2, 1.55, 1.0), Color(0.18, 0.20, 0.22), Vector3(0.42, 0.08, 0.42))
+	_add_item("plate", Vector3(0.7, 1.55, 1.0), Color(0.88, 0.87, 0.82), Vector3(0.34, 0.045, 0.34))
+	hob_area = _make_station("TemporaryHobProxy", Vector3(0.5, 1.02, -0.1), Vector3(1.1, 0.12, 0.9), Color(0.16, 0.17, 0.18))
+	plate_area = _make_station("TemporaryPlatingProxy", Vector3(1.8, 1.02, 1.8), Vector3(0.9, 0.10, 0.7), Color(0.60, 0.62, 0.62))
 
 func _make_station(label_text: String, pos: Vector3, size: Vector3, color: Color) -> Area3D:
 	var area := Area3D.new()
@@ -220,4 +317,6 @@ func _item_label(item_id: String) -> String:
 		"carrot": return "Wortel"
 		"potato": return "Aardappel"
 		"knife": return "Mes"
+		"pan": return "Pan"
+		"plate": return "Bord"
 	return item_id
