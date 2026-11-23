@@ -179,8 +179,6 @@ func get_context() -> Dictionary:
 	if pos.distance_to(counter_position) <= REACH:
 		if not board_on_counter and _is_holding("cutting_board"):
 			return {"label": "LEG SNIJPLANK NEER", "target": "place_board"}
-		if not knife_in_hand and _is_holding("chef_knife"):
-			return {"label": "LEG MES OP WERKBLAD", "target": "place_knife"}
 		if not inventory.get_held_item().is_empty():
 			return {"label": "LEG INGREDIËNT NEER", "target": "place_food"}
 		if board_on_counter and knife_in_hand and not Dictionary(GameState.player_data.get("kitchen_worktop", {})).is_empty():
@@ -225,11 +223,6 @@ func interact() -> void:
 			_create_board_visual()
 			_clear_held_visual()
 			last_message = "Snijplank ligt op het werkblad."
-		"place_knife":
-			knife_in_hand = false
-			GameState.player_data["kitchen_held_tool"] = ""
-			last_message = "Mes ligt op het werkblad. Neem het opnieuw om te snijden."
-			_clear_held_visual()
 		"place_food":
 			var result: Dictionary = inventory.put_down_item()
 			last_message = str(result.get("message", ""))
@@ -378,6 +371,10 @@ func _cut_ingredient() -> void:
 	if bool(result.get("ok", false)):
 		GameState.player_data["kitchen_prepared"] = str(GameState.player_data.get("kitchen_prepared", "")) + item_id + ","
 		last_message = "Je hebt %s gesneden. Het ingrediënt is verbruikt en als voorbereid geregistreerd." % item_id
+		if is_instance_valid(board_visual):
+			for child in board_visual.get_children():
+				if child.name.begins_with("PreparedIngredient_"):
+					child.queue_free()
 		if is_instance_valid(player):
 			player.set_working_action("prepare", true)
 			await get_tree().create_timer(0.65).timeout
