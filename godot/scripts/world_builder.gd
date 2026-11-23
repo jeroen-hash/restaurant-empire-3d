@@ -160,62 +160,58 @@ func _build_culinary_school() -> void:
 	school.position = Vector3(-22.0, 0.0, -9.0)
 	add_child(school)
 
-	# Open-roof teaching kitchen so the player and the full equipment remain visible.
-	_box(school, "SchoolKitchenFloor", Vector3(0, -0.14, 0), Vector3(12.0, 0.28, 10.2), Color(0.34, 0.36, 0.35))
-	_box(school, "SchoolBackWall", Vector3(0, 1.8, -5.0), Vector3(12.0, 3.6, 0.25), Color(0.68, 0.67, 0.62))
-	_box(school, "SchoolLeftWall", Vector3(-5.9, 1.8, 0), Vector3(0.25, 3.6, 10.0), Color(0.68, 0.67, 0.62))
-	_box(school, "SchoolRightWall", Vector3(5.9, 1.8, 0), Vector3(0.25, 3.6, 10.0), Color(0.68, 0.67, 0.62))
-	_box(school, "SchoolFrontLeft", Vector3(-4.55, 1.8, 5.0), Vector3(2.7, 3.6, 0.25), Color(0.68, 0.67, 0.62))
-	_box(school, "SchoolFrontRight", Vector3(4.55, 1.8, 5.0), Vector3(2.7, 3.6, 0.25), Color(0.68, 0.67, 0.62))
-	_box(school, "SchoolEntranceHeader", Vector3(0, 3.25, 5.0), Vector3(6.4, 0.7, 0.25), Color(0.16, 0.22, 0.19))
-	_box(school, "SchoolSign", Vector3(0, 3.65, 5.18), Vector3(5.5, 0.52, 0.12), Color(0.12, 0.17, 0.15), false)
-	_label(school, "ANIMO CULINARY SCHOOL", Vector3(0, 3.56, 5.10), 0.19, Color(0.91, 0.82, 0.62))
-	_label(school, "PRAKTIJKKEUKEN 01", Vector3(0, 2.95, -4.72), 0.14)
+	# The training kitchen is built around the complete CC0 professional
+	# restaurant kitchen asset pack. Do not surround it with visible blockout
+	# walls, benches or primitive equipment.
+	var floor := MeshInstance3D.new()
+	floor.name = "ProfessionalKitchenFloor"
+	var floor_mesh := PlaneMesh.new()
+	floor_mesh.size = Vector2(22.0, 18.0)
+	floor.mesh = floor_mesh
+	floor.position = Vector3(0.0, -0.015, 0.0)
+	var floor_material := _material(Color(0.23, 0.25, 0.25), 0.32, 0.12)
+	floor_material.metallic = 0.08
+	floor.material_override = floor_material
+	school.add_child(floor)
+	_collision_box(school, "KitchenFloorCollision", Vector3(0.0, -0.24, 0.0), Vector3(22.0, 0.45, 18.0))
 
 	var kitchen_scene := load("res://assets/environment/working-kitchen-line.glb") as PackedScene
 	if kitchen_scene != null:
 		var kitchen := kitchen_scene.instantiate()
-		kitchen.name = "ANIMO_Professional_Training_Kitchen"
-		kitchen.position = Vector3(0.0, 0.02, -1.9)
+		kitchen.name = "ANIMO_Realistic_Professional_Kitchen_143_Assets"
+		kitchen.position = Vector3.ZERO
+		kitchen.scale = Vector3.ONE
 		school.add_child(kitchen)
 	else:
-		push_warning("De 3D-praktijkkeuken kon niet worden geladen.")
+		push_error("De professionele 3D-keuken ontbreekt. Geen blokkenkeuken als vervanging tonen.")
 
-	# Vier afzonderlijke, herkenbare praktijkstations aan de open voorzijde.
-	# De speler moet fysiek naar de juiste post lopen voor elke kookhandeling.
-	var station_x := [-3.0, -1.0, 1.0, 3.0]
-	var station_names := ["SNIJDEN", "GAREN", "KRUIDEN", "DRESSEREN"]
-	var station_accents := [Color(0.72, 0.48, 0.22), Color(0.30, 0.39, 0.43), Color(0.43, 0.52, 0.32), Color(0.62, 0.56, 0.43)]
-	for i in range(4):
-		var x: float = station_x[i]
-		var station := Node3D.new()
-		station.name = "ANIMO_Workstation_" + station_names[i]
-		station.position = Vector3(x, 0.0, 2.25)
-		school.add_child(station)
-		_box(station, "StainlessWorkBench", Vector3(0, 0.48, 0), Vector3(1.72, 0.92, 0.92), Color(0.25, 0.28, 0.28), true, 0.34)
-		_box(station, "SteelWorkTop", Vector3(0, 0.96, 0), Vector3(1.82, 0.10, 1.02), Color(0.68, 0.70, 0.68), false, 0.22)
-		_box(station, "StationAccent", Vector3(0, 0.42, 0.47), Vector3(1.68, 0.12, 0.035), station_accents[i], false, 0.35)
-		_label(station, station_names[i], Vector3(0, 1.72, 0.0), 0.14, Color(0.96, 0.88, 0.70))
-		if i == 0:
-			_box(station, "CuttingBoard", Vector3(0, 1.04, 0), Vector3(0.78, 0.045, 0.52), Color(0.56, 0.39, 0.23), false)
-			_box(station, "ChefKnifeBlade", Vector3(0.36, 1.10, 0), Vector3(0.36, 0.018, 0.07), Color(0.78, 0.81, 0.80), false, 0.2)
-		elif i == 1:
-			_cylinder(station, "CookingPan", Vector3(0, 1.10, 0), 0.30, 0.10, Color(0.16, 0.18, 0.19), 24)
-			_box(station, "PanHandle", Vector3(0.38, 1.11, 0), Vector3(0.48, 0.055, 0.08), Color(0.12, 0.13, 0.13), false)
-			_cylinder(station, "InductionHob", Vector3(0, 1.035, 0), 0.38, 0.025, Color(0.08, 0.09, 0.10), 32)
-		elif i == 2:
-			for j in range(3):
-				_cylinder(station, "SeasoningBowl_%d" % j, Vector3(-0.42 + j * 0.42, 1.10, 0), 0.13, 0.09, station_accents[j], 16)
-		else:
-			_cylinder(station, "PlatingPlate", Vector3(0, 1.08, 0), 0.34, 0.035, Color(0.88, 0.86, 0.79), 32)
-			_cylinder(station, "PlateRim", Vector3(0, 1.105, 0), 0.30, 0.018, Color(0.96, 0.94, 0.88), 32)
+	# Labels identify the practical zones; the actual equipment comes from
+	# the imported 3D kitchen asset, never from primitive box furniture.
+	var zone_data := [
+		{"name": "SNIJDEN & VOORBEREIDEN", "position": Vector3(-3.0, 2.15, 2.25)},
+		{"name": "WARME KEUKEN", "position": Vector3(-1.0, 2.15, 2.25)},
+		{"name": "KRUIDEN & PROEVEN", "position": Vector3(1.0, 2.15, 2.25)},
+		{"name": "DRESSEREN & PAS", "position": Vector3(3.0, 2.15, 2.25)}
+	]
+	for zone in zone_data:
+		var marker := Label3D.new()
+		marker.name = "Zone_" + str(zone["name"]).replace(" ", "_")
+		marker.text = str(zone["name"])
+		marker.position = zone["position"]
+		marker.font_size = 42
+		marker.pixel_size = 0.0035
+		marker.modulate = Color(0.96, 0.86, 0.65)
+		marker.outline_size = 6
+		marker.outline_modulate = Color(0.04, 0.05, 0.05)
+		marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		school.add_child(marker)
 
-	# Practical work surfaces are part of the imported professional kitchen set.
 	var school_light := OmniLight3D.new()
-	school_light.position = Vector3(0, 3.1, 0.8)
-	school_light.light_color = Color(1.0, 0.91, 0.78)
-	school_light.light_energy = 1.15
-	school_light.omni_range = 13.0
+	school_light.name = "WarmProfessionalKitchenLighting"
+	school_light.position = Vector3(0.0, 3.8, 0.8)
+	school_light.light_color = Color(1.0, 0.88, 0.72)
+	school_light.light_energy = 1.45
+	school_light.omni_range = 18.0
 	school.add_child(school_light)
 
 func _build_cafe() -> void:
