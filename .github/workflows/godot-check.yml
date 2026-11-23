@@ -81,6 +81,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Upload website for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
