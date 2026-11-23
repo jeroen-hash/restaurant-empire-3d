@@ -70,6 +70,12 @@ jobs:
       - name: Publish web export into the GitHub Pages test folder
         if: github.event_name != 'pull_request'
         run: |
+          # Preserve the fresh export, then base the publishing commit on the latest branch tip.
+          cp -a godot-web /tmp/godot-web-export
+          git fetch origin rebuild/visual-foundation
+          git reset --hard origin/rebuild/visual-foundation
+          rm -rf godot-web
+          cp -a /tmp/godot-web-export godot-web
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add godot-web
