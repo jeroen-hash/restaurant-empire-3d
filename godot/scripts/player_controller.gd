@@ -23,6 +23,8 @@ var spawn_safety_position := Vector3(-25.0, 0.0, -5.0)
 var camera_pivot: Node3D
 var camera: Camera3D
 var camera_arm: SpringArm3D
+var _occluded_visual: GeometryInstance3D
+var _occluded_visual_original_transparency := 0.0
 var character: Node3D
 var left_arm: Node3D
 var right_arm: Node3D
@@ -318,6 +320,43 @@ func _physics_process(delta: float) -> void:
 
 	camera_pivot.rotation.y = camera_yaw
 	camera_pivot.rotation.x = camera_pitch
+	_update_camera_occlusion()
+
+
+func _update_camera_occlusion() -> void:
+	# SpringArm shortens the camera distance, but a wall can still fill the
+	# entire view when the camera is pushed right up against it. Fade the
+	# obstructing wall itself so the player remains visible on mobile.
+	if not is_instance_valid(camera) or not is_instance_valid(camera_pivot):
+		return
+	var origin := camera_pivot.global_position
+	var camera_offset := camera.global_position - origin
+	if camera_offset.length() < 0.15:
+		_restore_occluded_visual()
+		return
+	var target := camera.global_position + camera_offset.normalized() * 0.55
+	var query := PhysicsRayQueryParameters3D.create(origin, target, 1, [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	var new_visual: GeometryInstance3D = null
+	if not hit.is_empty():
+		var collider := hit.get("collider") as Node
+		if collider != null and collider.get_parent() != null:
+			var visual_name := String(collider.name).trim_suffix("Collision")
+			var candidate := collider.get_parent().get_node_or_null(visual_name)
+			if candidate is GeometryInstance3D:
+				new_visual = candidate as GeometryInstance3D
+	if new_visual == _occluded_visual:
+		return
+	_restore_occluded_visual()
+	if new_visual != null:
+		_occluded_visual = new_visual
+		_occluded_visual_original_transparency = new_visual.transparency
+		new_visual.transparency = 0.82
+
+func _restore_occluded_visual() -> void:
+	if is_instance_valid(_occluded_visual):
+		_occluded_visual.transparency = _occluded_visual_original_transparency
+	_occluded_visual = null
 
 func _animate_character(delta: float, speed: float) -> void:
 	if _animation_player != null:
