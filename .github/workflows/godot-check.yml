@@ -45,5 +45,8 @@ jobs:
       - name: Run practical cooking lesson tests
         run: godot --headless --path godot --script res://tests/test_cooking_lesson.gd
 
+      - name: Run kitchen inventory and handling tests
+        run: godot --headless --path godot --script res://tests/test_kitchen_inventory.gd
+
       - name: Launch main scene headlessly
         run: godot --headless --path godot --quit-after 10
