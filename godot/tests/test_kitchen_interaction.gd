@@ -52,8 +52,8 @@ func _run_tests() -> void:
 	game.world.show_cooking_action("plate")
 	var plate_visual: Node = game.world.get_node("ANIMO_CULINARY_SCHOOL/ANIMO_Workstation_DRESSEREN/ActionVisual_plate")
 	_assert(plate_visual.get_node_or_null("SearedChickenFillet") != null, "Plated dish contains a shaped main ingredient")
-	_assert(plate_visual.get_node_or_null("RoastedPotatoWedge_0") != null, "Plated dish contains potato garnish")
-	_assert(plate_visual.get_node_or_null("GlazedCarrot_0") != null, "Plated dish contains vegetable garnish")
+	_assert(plate_visual.get_node_or_null("RoastedPotatoWedge_00") != null, "Plated dish contains potato garnish")
+	_assert(plate_visual.get_node_or_null("GlazedCarrot_00") != null, "Plated dish contains vegetable garnish")
 	_assert(plate_visual.get_node_or_null("PlatedFood_0") == null, "Plating no longer uses coloured food spheres")
 
 	if failures == 0:
