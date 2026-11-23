@@ -1,5 +1,4 @@
-name: Publish real-kitchen test build
-# Build a Safari-focused Godot Web template with a bounded WASM heap.
+name: Publish real-kitchen iPhone test
 on:
   push:
     branches:
@@ -9,88 +8,88 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: github-pages
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build-and-publish:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Check out the real kitchen game branch
+      - name: Check out publishing branch
+        uses: actions/checkout@v4
+        with:
+          ref: rebuild/visual-foundation
+
+      - name: Check out the real game source
         uses: actions/checkout@v4
         with:
           ref: rebuild/real-kitchen-v1
           path: game
 
-      - name: Install build tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config
-          python3 -m pip install --user scons==4.8.1 --break-system-packages
-
-      - name: Install Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 4.0.9
-          actions-cache-folder: emsdk-cache
-
-      - name: Build Safari-focused Godot 4.5.1 Web template
-        run: |
-          git clone --depth 1 --branch 4.5.1-stable https://github.com/godotengine/godot.git godot-engine
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path("godot-engine/platform/web/detect.py")
-          source = path.read_text()
-          needle = 'env.Append(LINKFLAGS=["-sALLOW_MEMORY_GROWTH=1"])'
-          replacement = needle + '\n    # Keep WebAssembly linear memory within a mobile Safari-friendly ceiling.\n    env.Append(LINKFLAGS=["-sMAXIMUM_MEMORY=512MB"])'
-          if needle not in source:
-              raise SystemExit("Could not find the expected Emscripten memory-growth setting.")
-          path.write_text(source.replace(needle, replacement, 1))
-          PY
-          cd godot-engine
-          scons platform=web target=template_release threads=no optimize=size lto=none -j2
-          cd ..
-          cp godot-engine/bin/godot.web.template_release.wasm32.nothreads.zip game/godot/web_release.zip
-          test -s game/godot/web_release.zip
-
-      - name: Install Godot 4.5.1 editor and Web export templates
+      - name: Install official Godot 4.5.1 editor and Web templates
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_linux.x86_64.zip -O godot.zip
           unzip -q godot.zip -d godot-bin
           chmod +x godot-bin/Godot_v4.5.1-stable_linux.x86_64
           sudo mv godot-bin/Godot_v4.5.1-stable_linux.x86_64 /usr/local/bin/godot
-          wget -q https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_export_templates.tpz -O export_templates.tpz
-          mkdir -p "$RUNNER_TEMP/godot-export-templates" "$HOME/.local/share/godot/export_templates/4.5.1.stable"
-          unzip -q export_templates.tpz -d "$RUNNER_TEMP/godot-export-templates"
-          cp -a "$RUNNER_TEMP/godot-export-templates/templates/." "$HOME/.local/share/godot/export_templates/4.5.1.stable/"
+          wget -q https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_export_templates.tpz -O templates.tpz
+          mkdir -p "$RUNNER_TEMP/godot-templates" "$HOME/.local/share/godot/export_templates/4.5.1.stable"
+          unzip -q templates.tpz -d "$RUNNER_TEMP/godot-templates"
+          cp -a "$RUNNER_TEMP/godot-templates/templates/." "$HOME/.local/share/godot/export_templates/4.5.1.stable/"
 
-      - name: Export with the bounded-memory Web template
-        working-directory: game
+      - name: Download the licensed game assets
         run: |
-          sed -i "s|^custom_template/release=.*|custom_template/release=\"$GITHUB_WORKSPACE/game/godot/web_release.zip\"|" godot/export_presets.cfg
-          mkdir -p dist
-          godot --headless --editor --path godot --quit
-          godot --headless --path godot --export-release "Web" ../dist/index.html
-          test -s dist/index.html
-          test -s dist/index.wasm
-          test -s dist/index.pck
+          mkdir -p game/godot/assets/characters game/godot/assets/environment
+          curl -fL --retry 3 https://models.vinish.dev/people/casual-man.glb -o game/godot/assets/characters/casual-man.glb
+          curl -fL --retry 3 https://models.vinish.dev/people/casual-woman.glb -o game/godot/assets/characters/casual-woman.glb
+          curl -fL --retry 3 https://files.innerscene.com/library/restaurant-service-station-c9b08fa4/a452f798f24d80dda162/restaurant-service-station.glb -o game/godot/assets/environment/restaurant-service-station.glb
+          curl -fL --retry 3 https://files.innerscene.com/library/restaurant-2-top-table-set-49d30711/f6f195708795d83bf51a/restaurant-2-top-table-set.glb -o game/godot/assets/environment/restaurant-2-top-table-set.glb
+          curl -fL --retry 3 https://files.innerscene.com/library/casual-dining-restaurant-interior-60-covers-a1baf64a/c93ee621542c51b8f223/casual-dining-restaurant-interior-60-covers.glb -o game/godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
+          curl -fL --retry 3 https://cdn.3dassets.dev/assets/16541/v1/model.glb -o game/godot/assets/environment/working-kitchen-line.glb
+          npx --yes @gltf-transform/cli dequantize game/godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb /tmp/dining.glb
+          mv /tmp/dining.glb game/godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
+          npx --yes @gltf-transform/cli dequantize game/godot/assets/environment/working-kitchen-line.glb /tmp/kitchen.glb
+          mv /tmp/kitchen.glb game/godot/assets/environment/working-kitchen-line.glb
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Import and parse the complete game
+        run: timeout 300s godot --headless --editor --path game/godot --quit --verbose
 
-      - name: Upload website for GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: game/dist/
+      - name: Run gameplay and data tests
+        run: |
+          godot --headless --path game/godot --script res://tests/test_economy.gd
+          godot --headless --path game/godot --script res://tests/test_education.gd
+          godot --headless --path game/godot --script res://tests/test_camera.gd
+          timeout 180s godot --headless --path game/godot --script res://tests/test_kitchen_interaction.gd
+          godot --headless --path game/godot --script res://tests/test_save_migration.gd
+          godot --headless --path game/godot --script res://tests/test_cooking_lesson.gd
 
-      - name: Publish playable web build
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Launch the real main scene headlessly
+        run: timeout 90s godot --headless --path game/godot --quit-after 10
+
+      - name: Export the full game for mobile Safari
+        run: |
+          mkdir -p real-game-test
+          godot --headless --path game/godot --export-release "Web" "$GITHUB_WORKSPACE/real-game-test/index.html"
+          test -s real-game-test/index.html
+          test -s real-game-test/index.wasm
+          test -s real-game-test/index.pck
+          touch real-game-test/.nojekyll
+          cat > real-game-test/README.txt <<'EOF'
+          RESTAURANT EMPIRE 3D - Real game iPhone test
+          This is the full Godot game export, not the minimal cube diagnostic.
+          It is an early test build and has not yet been confirmed on a physical iPhone.
+          EOF
+          ls -lh real-game-test/index.html real-game-test/index.wasm real-game-test/index.pck
+
+      - name: Publish the test build without replacing the main site
+        run: |
+          git fetch origin rebuild/visual-foundation
+          git reset --hard origin/rebuild/visual-foundation
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add real-game-test/
+          git commit -m "Publish full RESTAURANT EMPIRE 3D iPhone test" || exit 0
+          git push origin HEAD:rebuild/visual-foundation
