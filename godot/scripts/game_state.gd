@@ -2,11 +2,17 @@ extends Node
 ## Centrale spelstatus en lokale opslag. Multiplayer/cloud sync komt later.
 
 const SAVE_PATH := "user://restaurant_empire_save.json"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 var player_data: Dictionary = {
 	"career_level": 1,
 	"career_title": "Culinaire student",
+	"education_year": 1,
+	"education_level": 1,
+	"education_xp": 0,
+	"theory_skill": 0,
+	"practical_skill": 0,
+	"education_status": "Ingeschreven",
 	"cash": 250.0,
 	"day": 1,
 	"game_minutes": 8 * 60,
@@ -46,9 +52,23 @@ func load_game() -> bool:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_warning("Bewaarbestand is ongeldig; nieuwe startgegevens worden gebruikt.")
 		return false
-	if int(parsed.get("version", 0)) != SAVE_VERSION:
+	var saved_version := int(parsed.get("version", 0))
+	if saved_version < 1 or saved_version > SAVE_VERSION:
 		push_warning("Bewaarbestand heeft een niet-ondersteunde versie.")
 		return false
 	player_data = parsed.get("player", player_data)
 	restaurant_data = parsed.get("restaurant", restaurant_data)
+
+	# Migrate earlier prototype saves into the agreed culinary-school start.
+	if saved_version == 1 and not player_data.has("education_year"):
+		player_data["career_title"] = "Culinaire student"
+		player_data["career_level"] = 1
+		player_data["education_year"] = 1
+		player_data["education_level"] = 1
+		player_data["education_xp"] = 0
+		player_data["theory_skill"] = 0
+		player_data["practical_skill"] = 0
+		player_data["education_status"] = "Ingeschreven"
+		player_data["position"] = {"x": -22.0, "y": 0.0, "z": -5.3}
+		save_game()
 	return true
