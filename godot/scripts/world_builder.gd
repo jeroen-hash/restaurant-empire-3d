@@ -420,9 +420,20 @@ func show_cooking_action(action: String) -> void:
 		heat.light_energy = 1.1
 		heat.omni_range = 2.2
 		visual.add_child(heat)
-		var steam := _sphere(visual, "CookingSteam", Vector3(0, 1.48, 0), 0.10, Color(0.86, 0.89, 0.88))
-		steam.transparency = 0.38
-		steam.scale = Vector3(0.65, 1.8, 0.65)
+		var heat_pulse := visual.create_tween()
+		heat_pulse.set_loops()
+		heat_pulse.tween_property(heat, "light_energy", 1.75, 0.32)
+		heat_pulse.tween_property(heat, "light_energy", 0.62, 0.32)
+		for i in range(3):
+			var steam := _sphere(visual, "CookingSteam_%02d" % i, Vector3(-0.18 + float(i) * 0.18, 1.38, 0), 0.075, Color(0.86, 0.89, 0.88))
+			steam.transparency = 0.48
+			steam.scale = Vector3(0.65, 1.8, 0.65)
+			var steam_tween := visual.create_tween()
+			steam_tween.set_loops()
+			steam_tween.tween_property(steam, "position:y", 1.92 + float(i) * 0.08, 0.9).set_delay(float(i) * 0.22)
+			steam_tween.parallel().tween_property(steam, "transparency", 0.92, 0.9).set_delay(float(i) * 0.22)
+			steam_tween.tween_property(steam, "position:y", 1.38, 0.01)
+			steam_tween.parallel().tween_property(steam, "transparency", 0.48, 0.01)
 	elif action == "season":
 		for i in range(12):
 			var spice := _sphere(visual, "Seasoning_%02d" % i, Vector3(-0.42 + float(i % 4) * 0.27, 1.19 + float(i % 3) * 0.035, -0.12 + float(i / 4) * 0.13), 0.025, Color(0.76, 0.56, 0.20) if i % 2 == 0 else Color(0.34, 0.43, 0.20))
