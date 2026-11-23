@@ -3,10 +3,14 @@ extends Node3D
 const WorldBuilderScript = preload("res://scripts/world_builder.gd")
 const PlayerControllerScript = preload("res://scripts/player_controller.gd")
 const EconomyScript = preload("res://scripts/restaurant_economy.gd")
+const EducationScript = preload("res://scripts/education_progression.gd")
 
 var player: PlayerController
 var economy
+var education
 var status_label: Label
+var education_label: Label
+var message_label: Label
 var save_label: Label
 var world: WorldBuilder
 var clock_accumulator := 0.0
@@ -15,6 +19,7 @@ func _ready() -> void:
 	_setup_input()
 	GameState.load_game()
 	economy = EconomyScript.new(GameState.player_data, GameState.restaurant_data)
+	education = EducationScript.new(GameState.player_data)
 	world = WorldBuilderScript.new()
 	world.name = "World"
 	add_child(world)
@@ -28,13 +33,14 @@ func _ready() -> void:
 		float(saved_position.get("z", 5.0))
 	))
 	_build_hud()
+	_refresh_education_ui()
 
 func _process(delta: float) -> void:
 	if player != null:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
 
-	# Agreed game clock: one in-game minute per real second (a full day = 24 real minutes).
+	# Eén seconde echt = één minuut spel; een volledige dag duurt 24 minuten.
 	clock_accumulator += delta
 	if clock_accumulator >= 1.0:
 		var elapsed_minutes := int(clock_accumulator)
@@ -78,7 +84,7 @@ func _build_hud() -> void:
 	add_child(layer)
 	var panel := PanelContainer.new()
 	panel.position = Vector2(18, 18)
-	panel.custom_minimum_size = Vector2(260, 74)
+	panel.custom_minimum_size = Vector2(300, 74)
 	layer.add_child(panel)
 	var column := VBoxContainer.new()
 	panel.add_child(column)
@@ -94,14 +100,59 @@ func _build_hud() -> void:
 		initial_minutes % 60
 	]
 	column.add_child(status_label)
-	save_label = Label.new()
-	save_label.text = "WASD / pijlen bewegen  ·  rechts slepen = camera"
-	column.add_child(save_label)
+	education_label = Label.new()
+	column.add_child(education_label)
+	message_label = Label.new()
+	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(message_label)
 
+	var study_row := HBoxContainer.new()
+	column.add_child(study_row)
+	var theory_button := Button.new()
+	theory_button.text = "THEORIELES"
+	theory_button.pressed.connect(_on_study_theory)
+	study_row.add_child(theory_button)
+	var practice_button := Button.new()
+	practice_button.text = "PRAKTIJKLES"
+	practice_button.pressed.connect(_on_study_practice)
+	study_row.add_child(practice_button)
+
+	var exam_button := Button.new()
+	exam_button.text = "EXAMEN AFLEGGEN"
+	exam_button.pressed.connect(_on_take_exam)
+	column.add_child(exam_button)
+
+	save_label = Label.new()
+	save_label.text = "BEWEGEN: joystick / WASD · CAMERA: rechts slepen"
+	column.add_child(save_label)
 	var save_button := Button.new()
 	save_button.text = "SPEL OPSLAAN"
 	save_button.pressed.connect(_save_now)
 	column.add_child(save_button)
+
+func _on_study_theory() -> void:
+	_apply_study("theory")
+
+func _on_study_practice() -> void:
+	_apply_study("practice")
+
+func _apply_study(study_type: String) -> void:
+	var result: Dictionary = education.study(study_type)
+	message_label.text = str(result.get("message", ""))
+	if int(result.get("level_ups", 0)) > 0:
+		message_label.text += " Niveau gestegen naar %d." % int(result["level"])
+	_refresh_education_ui()
+	_save_now()
+
+func _on_take_exam() -> void:
+	var result: Dictionary = education.take_exam()
+	message_label.text = str(result.get("message", ""))
+	_refresh_education_ui()
+	_save_now()
+
+func _refresh_education_ui() -> void:
+	if is_instance_valid(education_label):
+		education_label.text = education.get_summary()
 
 func _save_now() -> void:
 	if player != null:
