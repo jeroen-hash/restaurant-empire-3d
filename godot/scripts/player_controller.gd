@@ -7,7 +7,7 @@ class_name PlayerController
 @export var gravity := 18.0
 @export var mouse_sensitivity := 0.003
 @export var touch_sensitivity := 0.006
-@export var camera_distance := 5.2
+@export var camera_distance := 3.25
 var first_person := false
 var character_type := "man"
 
@@ -16,6 +16,8 @@ var camera_pitch := -0.12
 var touch_move := Vector2.ZERO
 var active_move_touch := -1
 var active_look_touch := -1
+var move_touch_origin := Vector2.ZERO
+var spawn_safety_position := Vector3(-22.0, 0.0, -5.3)
 
 var camera_pivot: Node3D
 var camera: Camera3D
@@ -48,8 +50,8 @@ func _ready() -> void:
 
 	camera = Camera3D.new()
 	camera.name = "ThirdPersonCamera"
-	camera.position = Vector3(0, 0.55, camera_distance)
-	camera.fov = 66.0
+	camera.position = Vector3(0, 0.32, camera_distance)
+	camera.fov = 60.0
 	camera_pivot.add_child(camera)
 	camera.current = true
 	_build_touch_controls()
@@ -72,7 +74,7 @@ func toggle_camera_mode() -> bool:
 		character.visible = false
 	else:
 		camera_pivot.position = Vector3(0, 1.48, 0)
-		camera.position = Vector3(0, 0.55, camera_distance)
+		camera.position = Vector3(0, 0.32, camera_distance)
 		character.visible = true
 	return first_person
 
@@ -256,6 +258,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y = 0.0
 	move_and_slide()
+	# Recovery guard: never let a bad spawn/collision send the player endlessly below the world.
+	if global_position.y < -3.0:
+		global_position = spawn_safety_position
+		velocity = Vector3.ZERO
 
 	if direction.length() > 0.08:
 		var target_yaw := atan2(-direction.x, -direction.z)
@@ -301,6 +307,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.pressed:
 			if event.position.x < get_viewport().get_visible_rect().size.x * 0.48 and active_move_touch == -1:
 				active_move_touch = event.index
+				move_touch_origin = event.position
 			elif active_look_touch == -1:
 				active_look_touch = event.index
 		else:
@@ -312,8 +319,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventScreenDrag:
 		if event.index == active_move_touch:
 			var size := get_viewport().get_visible_rect().size
-			var center := Vector2(size.x * 0.23, size.y * 0.78)
-			touch_move = ((event.position - center) / Vector2(100.0, 100.0)).limit_length(1.0)
+			touch_move = ((event.position - move_touch_origin) / Vector2(72.0, 72.0)).limit_length(1.0)
 		elif event.index == active_look_touch:
 			camera_yaw -= event.relative.x * touch_sensitivity
 			camera_pitch = clampf(camera_pitch - event.relative.y * touch_sensitivity, -0.72, 0.18)
