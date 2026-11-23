@@ -14,8 +14,18 @@ func _run_tests() -> void:
 	var game := scene.instantiate()
 	root.add_child(game)
 	await process_frame
-	game.player.set_spawn_position(Vector3(-25.0, 0.0, -6.75))
-	await process_frame
+	var kitchen: PhysicalKitchenV1 = game.physical_kitchen
+	_assert(kitchen != null, "Physical kitchen is attached to the culinary school")
+	if kitchen != null:
+		# Aim the real camera ray at the board from a reachable first-person position.
+		# The previous test only teleported the player and never pointed the camera
+		# at the target, so it was testing an unrelated empty ray.
+		var board_position: Vector3 = kitchen.board_area.global_position
+		game.player.set_spawn_position(board_position + Vector3(0.0, 0.0, 1.8))
+		game.player.camera_arm.spring_length = 0.08
+		game.player.camera_pivot.look_at(board_position + Vector3(0.0, 0.04, 0.0), Vector3.UP)
+		await physics_frame
+		await process_frame
 	var button: Button = game.get_node_or_null("HUD/KitchenContextButton")
 	_assert(button != null, "Single contextual kitchen button exists")
 	if button != null:
@@ -24,6 +34,7 @@ func _run_tests() -> void:
 		_assert(button.anchor_left == 1.0 and button.anchor_right == 1.0, "Context button is positioned on the right side")
 		_assert(game.get_node_or_null("HUD/KitchenActionBar") == null, "The fixed bottom action bar is removed")
 	game.player.set_spawn_position(Vector3(0.0, 0.0, 0.0))
+	game.player.camera_arm.spring_length = game.player.camera_distance
 	await process_frame
 	_assert(button != null and not button.visible, "Context button disappears away from kitchen workstations")
 
