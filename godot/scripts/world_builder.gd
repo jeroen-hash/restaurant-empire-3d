@@ -181,6 +181,35 @@ func _build_culinary_school() -> void:
 	else:
 		push_warning("De 3D-praktijkkeuken kon niet worden geladen.")
 
+	# Vier afzonderlijke, herkenbare praktijkstations aan de open voorzijde.
+	# De speler moet fysiek naar de juiste post lopen voor elke kookhandeling.
+	var station_x := [-3.0, -1.0, 1.0, 3.0]
+	var station_names := ["SNIJDEN", "GAREN", "KRUIDEN", "DRESSEREN"]
+	var station_accents := [Color(0.72, 0.48, 0.22), Color(0.30, 0.39, 0.43), Color(0.43, 0.52, 0.32), Color(0.62, 0.56, 0.43)]
+	for i in range(4):
+		var x: float = station_x[i]
+		var station := Node3D.new()
+		station.name = "ANIMO_Workstation_" + station_names[i]
+		station.position = Vector3(x, 0.0, 2.25)
+		school.add_child(station)
+		_box(station, "StainlessWorkBench", Vector3(0, 0.48, 0), Vector3(1.72, 0.92, 0.92), Color(0.25, 0.28, 0.28), true, 0.34)
+		_box(station, "SteelWorkTop", Vector3(0, 0.96, 0), Vector3(1.82, 0.10, 1.02), Color(0.68, 0.70, 0.68), false, 0.22)
+		_box(station, "StationAccent", Vector3(0, 0.42, 0.47), Vector3(1.68, 0.12, 0.035), station_accents[i], false, 0.35)
+		_label(station, station_names[i], Vector3(0, 1.72, 0.0), 0.14, Color(0.96, 0.88, 0.70))
+		if i == 0:
+			_box(station, "CuttingBoard", Vector3(0, 1.04, 0), Vector3(0.78, 0.045, 0.52), Color(0.56, 0.39, 0.23), false)
+			_box(station, "ChefKnifeBlade", Vector3(0.36, 1.10, 0), Vector3(0.36, 0.018, 0.07), Color(0.78, 0.81, 0.80), false, 0.2)
+		elif i == 1:
+			_cylinder(station, "CookingPan", Vector3(0, 1.10, 0), 0.30, 0.10, Color(0.16, 0.18, 0.19), 24)
+			_box(station, "PanHandle", Vector3(0.38, 1.11, 0), Vector3(0.48, 0.055, 0.08), Color(0.12, 0.13, 0.13), false)
+			_cylinder(station, "InductionHob", Vector3(0, 1.035, 0), 0.38, 0.025, Color(0.08, 0.09, 0.10), 32)
+		elif i == 2:
+			for j in range(3):
+				_cylinder(station, "SeasoningBowl_%d" % j, Vector3(-0.42 + j * 0.42, 1.10, 0), 0.13, 0.09, station_accents[j], 16)
+		else:
+			_cylinder(station, "PlatingPlate", Vector3(0, 1.08, 0), 0.34, 0.035, Color(0.88, 0.86, 0.79), 32)
+			_cylinder(station, "PlateRim", Vector3(0, 1.105, 0), 0.30, 0.018, Color(0.96, 0.94, 0.88), 32)
+
 	# Practical work surfaces are part of the imported professional kitchen set.
 	var school_light := OmniLight3D.new()
 	school_light.position = Vector3(0, 3.1, 0.8)
