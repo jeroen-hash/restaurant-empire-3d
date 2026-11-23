@@ -14,6 +14,9 @@ var message_label: Label
 var save_label: Label
 var world: WorldBuilder
 var clock_accumulator := 0.0
+var autosave_accumulator := 0.0
+var pause_button: Button
+var game_paused := false
 
 func _ready() -> void:
 	_setup_input()
@@ -39,6 +42,12 @@ func _process(delta: float) -> void:
 	if player != null:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
+
+	# Automatisch bewaren, ook als de speler lang bezig is.
+	autosave_accumulator += delta
+	if autosave_accumulator >= 30.0:
+		autosave_accumulator = 0.0
+		_save_now()
 
 	# Eén seconde echt = één minuut spel; een volledige dag duurt 24 minuten.
 	clock_accumulator += delta
@@ -88,6 +97,7 @@ func _build_hud() -> void:
 	layer.add_child(panel)
 	var column := VBoxContainer.new()
 	panel.add_child(column)
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	var title := Label.new()
 	title.text = "ANIMO  ·  RESTAURANT EMPIRE 3D"
 	column.add_child(title)
@@ -122,6 +132,11 @@ func _build_hud() -> void:
 	exam_button.pressed.connect(_on_take_exam)
 	column.add_child(exam_button)
 
+	pause_button = Button.new()
+	pause_button.text = "PAUZE"
+	pause_button.pressed.connect(_toggle_pause)
+	column.add_child(pause_button)
+
 	save_label = Label.new()
 	save_label.text = "BEWEGEN: joystick / WASD · CAMERA: rechts slepen"
 	column.add_child(save_label)
@@ -153,6 +168,14 @@ func _on_take_exam() -> void:
 func _refresh_education_ui() -> void:
 	if is_instance_valid(education_label):
 		education_label.text = education.get_summary()
+
+func _toggle_pause() -> void:
+	game_paused = not game_paused
+	get_tree().paused = game_paused
+	if is_instance_valid(pause_button):
+		pause_button.text = "VERDER SPELEN" if game_paused else "PAUZE"
+	if game_paused:
+		_save_now()
 
 func _save_now() -> void:
 	if player != null:
