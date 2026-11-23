@@ -47,9 +47,9 @@ func _ready() -> void:
 	camera = Camera3D.new()
 	camera.name = "ThirdPersonCamera"
 	camera.position = Vector3(0, 2.1, 5.6)
+	camera.rotation.x = 0.23
 	camera.fov = 68.0
 	camera_pivot.add_child(camera)
-	camera.look_at_from_position(camera.position, Vector3(0, 0.8, 0), Vector3.UP)
 	camera.current = true
 
 func _physics_process(delta: float) -> void:
