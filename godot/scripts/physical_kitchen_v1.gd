@@ -16,6 +16,9 @@ var stock := {"chicken": 4, "carrot": 6, "potato": 6}
 var item_nodes: Dictionary = {}
 var board_area: Area3D
 var board_has_ingredient := false
+var board_ingredient_id := ""
+var prepared_ingredients: Dictionary = {}
+var ingredients_in_pan: Array[String] = []
 var chicken_cut := false
 var knife_taken := false
 var hob_area: Area3D
@@ -61,11 +64,11 @@ func handle_interaction() -> bool:
 		if hit.has("collider") and hit.collider == hob_area and held_item_id == "pan":
 			_place_pan_on_hob()
 			return true
-		if hit.has("collider") and hit.collider == board_area and held_item_id == "chicken":
-			_place_chicken_on_board()
+		if hit.has("collider") and hit.collider == board_area and held_item_id in ["chicken", "carrot", "potato"] and not board_has_ingredient:
+			_place_ingredient_on_board()
 			return true
-		if hit.has("collider") and hit.collider == board_area and held_item_id == "knife" and board_has_ingredient and not chicken_cut:
-			_cut_chicken_on_board()
+		if hit.has("collider") and hit.collider == board_area and held_item_id == "knife" and board_has_ingredient and not bool(prepared_ingredients.get(board_ingredient_id, false)):
+			_cut_ingredient_on_board()
 			return true
 		if hit.has("collider") and hit.collider == plate_area and held_item_id == "plate" and chicken_cooked:
 			_serve_to_plate()
@@ -79,8 +82,8 @@ func handle_interaction() -> bool:
 	if hit.collider == hob_area and chicken_in_pan:
 		_advance_heat()
 		return true
-	if hit.collider == board_area and pan_on_hob and chicken_cut and not chicken_in_pan:
-		_load_chicken_into_pan()
+	if hit.collider == board_area and pan_on_hob and not chicken_in_pan and board_has_ingredient and bool(prepared_ingredients.get(board_ingredient_id, false)):
+		_load_prepared_ingredient_into_pan()
 		return true
 	var target := hit.collider as Node3D
 	if target == null:
@@ -141,9 +144,10 @@ func _drop_held_item() -> void:
 	held_item_id = ""
 	status_changed.emit("%s neergelegd." % _item_label(dropped_id))
 
-func _place_chicken_on_board() -> void:
-	if not is_instance_valid(held_item):
+func _place_ingredient_on_board() -> void:
+	if not is_instance_valid(held_item) or board_has_ingredient:
 		return
+	var ingredient_id := held_item_id
 	var item := held_item
 	hand_anchor.remove_child(item)
 	board_area.add_child(item)
@@ -156,32 +160,39 @@ func _place_chicken_on_board() -> void:
 	held_item = null
 	held_item_id = ""
 	board_has_ingredient = true
-	status_changed.emit("Kip ligt op de snijplank. Neem nu het mes van het messenrek.")
+	board_ingredient_id = ingredient_id
+	status_changed.emit("%s ligt op de snijplank. Neem het mes en richt op de plank om te snijden." % _item_label(ingredient_id))
 
-func _cut_chicken_on_board() -> void:
+func _cut_ingredient_on_board() -> void:
+	var ingredient_id := board_ingredient_id
 	var original: Node = null
 	for child in board_area.get_children():
-		if child is RigidBody3D and str(child.get_meta("item_id", "")) == "chicken":
+		if child is RigidBody3D and str(child.get_meta("item_id", "")) == ingredient_id:
 			original = child
 			break
 	if original == null:
-		status_changed.emit("De kip ligt niet meer op de snijplank.")
+		status_changed.emit("Het ingrediënt ligt niet meer op de snijplank.")
 		return
 	original.queue_free()
-	# Temporary visible cut pieces; replace with authored food meshes in the art pass.
-	for i in range(5):
+	var piece_count := 5 if ingredient_id == "chicken" else 4
+	for i in range(piece_count):
 		var piece := MeshInstance3D.new()
-		piece.name = "TemporaryCutChicken_%02d" % i
+		piece.name = "TemporaryCut_%s_%02d" % [ingredient_id, i]
 		var mesh := BoxMesh.new()
-		mesh.size = Vector3(0.075, 0.045, 0.065)
+		mesh.size = Vector3(0.075, 0.045, 0.065) if ingredient_id == "chicken" else Vector3(0.065, 0.055, 0.065)
 		piece.mesh = mesh
 		var material := StandardMaterial3D.new()
-		material.albedo_color = Color(0.82, 0.64, 0.52)
+		match ingredient_id:
+			"chicken": material.albedo_color = Color(0.82, 0.64, 0.52)
+			"carrot": material.albedo_color = Color(0.95, 0.36, 0.08)
+			"potato": material.albedo_color = Color(0.76, 0.66, 0.48)
 		piece.material_override = material
 		piece.position = Vector3(-0.18 + float(i % 3) * 0.16, 0.10, -0.08 + float(i / 3) * 0.15)
 		board_area.add_child(piece)
-	chicken_cut = true
-	status_changed.emit("Kip is zichtbaar in stukken gesneden. Neem de pan van het rek en plaats die op de kookplaat.")
+	prepared_ingredients[ingredient_id] = true
+	if ingredient_id == "chicken":
+		chicken_cut = true
+	status_changed.emit("%s is zichtbaar in stukken gesneden. Neem de pan, plaats die op de kookplaat en breng daarna de gesneden ingrediënten naar de pan." % _item_label(ingredient_id))
 
 func _place_pan_on_hob() -> void:
 	var pan := held_item
@@ -197,24 +208,33 @@ func _place_pan_on_hob() -> void:
 	pan_on_hob = true
 	status_changed.emit("Pan staat op de kookplaat. Maak je handen vrij en richt op de snijplank om de kip in de pan te doen.")
 
-func _load_chicken_into_pan() -> void:
-	if not pan_on_hob or not chicken_cut or chicken_in_pan:
+func _load_prepared_ingredient_into_pan() -> void:
+	if not pan_on_hob or not board_has_ingredient or not bool(prepared_ingredients.get(board_ingredient_id, false)):
 		return
+	var ingredient_id := board_ingredient_id
 	for child in board_area.get_children():
-		if child is MeshInstance3D and child.name.begins_with("TemporaryCutChicken"):
+		if child is MeshInstance3D and child.name.begins_with("TemporaryCut_%s_" % ingredient_id):
 			child.visible = false
 	var pan_piece := MeshInstance3D.new()
-	pan_piece.name = "TemporaryChickenInPan"
+	pan_piece.name = "TemporaryPan_%s" % ingredient_id
 	var mesh := BoxMesh.new()
 	mesh.size = Vector3(0.24, 0.07, 0.18)
 	pan_piece.mesh = mesh
 	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.76, 0.56, 0.42)
+	match ingredient_id:
+		"chicken": material.albedo_color = Color(0.76, 0.56, 0.42)
+		"carrot": material.albedo_color = Color(0.95, 0.36, 0.08)
+		"potato": material.albedo_color = Color(0.76, 0.66, 0.48)
 	pan_piece.material_override = material
-	pan_piece.position = Vector3(0.0, 0.24, 0.0)
+	pan_piece.position = Vector3(-0.12 + float(ingredients_in_pan.size()) * 0.12, 0.24, 0.0)
 	hob_area.add_child(pan_piece)
-	chicken_in_pan = true
-	status_changed.emit("Kip zit in de pan. Maak je handen vrij en richt op de kookplaat om te bakken.")
+	ingredients_in_pan.append(ingredient_id)
+	prepared_ingredients[ingredient_id] = false
+	board_has_ingredient = false
+	board_ingredient_id = ""
+	if ingredient_id == "chicken":
+		chicken_in_pan = true
+	status_changed.emit("%s toegevoegd aan de pan. Je kunt nog meer voorbereide ingrediënten toevoegen; richt op de kookplaat om de warmte te regelen." % _item_label(ingredient_id))
 
 func _advance_heat() -> void:
 	if not chicken_in_pan or chicken_cooked:
@@ -235,7 +255,7 @@ func _advance_heat() -> void:
 
 func _set_chicken_cooked_visual() -> void:
 	for child in hob_area.get_children():
-		if child is MeshInstance3D and child.name == "TemporaryChickenInPan":
+		if child is MeshInstance3D and child.name.begins_with("TemporaryPan_"):
 			var material := StandardMaterial3D.new()
 			material.albedo_color = Color(0.48, 0.29, 0.17)
 			child.material_override = material
