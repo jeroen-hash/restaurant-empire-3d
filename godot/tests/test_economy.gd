@@ -28,8 +28,13 @@ func _run_tests() -> void:
 	_assert(is_equal_approx(float(player["cash"]), 103.0), "Kas moet aankoop en verkoop correct verwerken")
 	_assert(int(restaurant["sales"]["count"]) == 1, "Er moet één verkoop geregistreerd zijn")
 
+	var second_sale = economy.prepare_and_sell("omelet")
+	_assert(second_sale["ok"], "Tweede verkoop moet lukken met de resterende vijf eieren")
+	_assert(is_equal_approx(float(restaurant["stock"]["eggs"]["quantity"]), 0.0), "Na twee porties moet de eierstock nul zijn")
+	_assert(is_equal_approx(float(player["cash"]), 111.0), "Twee verkopen moeten samen €16 omzet opleveren na de aankoop")
+
 	var blocked = economy.prepare_and_sell("omelet")
-	_assert(not blocked["ok"], "Tweede verkoop moet blokkeren bij onvoldoende voorraad")
+	_assert(not blocked["ok"], "Derde verkoop moet blokkeren wanneer de eierstock op is")
 
 	if failures == 0:
 		print("ECONOMY TESTS PASSED")
