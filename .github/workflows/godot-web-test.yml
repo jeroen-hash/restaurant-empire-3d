@@ -1,0 +1,75 @@
+name: Godot validation and iPhone web test
+
+on:
+  push:
+    branches:
+      - rebuild/visual-foundation
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-check.yml"
+      - ".github/workflows/godot-web-test.yml"
+  pull_request:
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-check.yml"
+      - ".github/workflows/godot-web-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: rebuild/visual-foundation
+
+      - name: Install Godot 4.4.1
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip -O godot.zip
+          unzip -q godot.zip -d godot-bin
+          chmod +x godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          sudo mv godot-bin/Godot_v4.4.1-stable_linux.x86_64 /usr/local/bin/godot
+
+      - name: Install matching Web export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz -O templates.tpz
+          unzip -q templates.tpz -d templates
+          cp -a templates/templates/. "$HOME/.local/share/godot/export_templates/4.4.1.stable/"
+
+      - name: Import and parse Godot project
+        run: godot --headless --editor --path godot --quit
+
+      - name: Run restaurant economy tests
+        run: godot --headless --path godot --script res://tests/test_economy.gd
+
+      - name: Launch main scene headlessly
+        run: godot --headless --path godot --quit-after 10
+
+      - name: Export web build for iPhone Safari
+        run: |
+          mkdir -p godot-web
+          godot --headless --path godot --export-release "Web" ../godot-web/index.html
+          touch godot-web/.nojekyll
+          cat > godot-web/TEST-INFO.txt <<'EOF'
+          RESTAURANT EMPIRE 3D — Godot web test
+          Generated automatically from the Godot project.
+          This is an early technical test build, not a finished game.
+          EOF
+
+      - name: Publish web export into the GitHub Pages test folder
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add godot-web
+          if git diff --cached --quiet; then
+            echo "No web export changes to publish."
+          else
+            git commit -m "Build Godot web test for iPhone"
+            git push origin HEAD:rebuild/visual-foundation
+          fi
