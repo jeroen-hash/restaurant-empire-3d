@@ -203,6 +203,8 @@ func get_context() -> Dictionary:
 			return {"label": "LEG INGREDIËNT NEER", "target": "place_food"}
 		if board_on_counter and knife_in_hand and not Dictionary(GameState.player_data.get("kitchen_worktop", {})).is_empty():
 			return {"label": "SNIJD INGREDIËNT", "target": "cut"}
+		if knife_in_hand:
+			return {"label": "LEG MES NEER", "target": "place_knife"}
 	return {"label": str(nearest["label"]), "target": target}
 
 func _is_holding(item_id: String) -> bool:
@@ -243,6 +245,11 @@ func interact() -> void:
 			_create_board_visual()
 			_clear_held_visual()
 			last_message = "Snijplank ligt op het werkblad."
+		"place_knife":
+			knife_in_hand = false
+			GameState.player_data["kitchen_held_tool"] = ""
+			_clear_held_visual()
+			last_message = "Mes veilig op het werkblad gelegd."
 		"place_food":
 			var result: Dictionary = inventory.put_down_item()
 			last_message = str(result.get("message", ""))
@@ -294,6 +301,10 @@ func _on_menu_option(option_id: String) -> void:
 		"none":
 			last_message = "Er is geen voorraad beschikbaar."
 		_:
+			if not str(GameState.player_data.get("kitchen_held_tool", "")).is_empty():
+				last_message = "Leg eerst het keukengerei neer voordat je een ingrediënt neemt."
+				_close_menu()
+				return
 			var stock: Dictionary = GameState.player_data.get("kitchen_stock", {})
 			var item: Dictionary = stock.get(option_id, {})
 			var amount := 1.0
