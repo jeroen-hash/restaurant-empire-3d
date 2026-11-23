@@ -15,6 +15,14 @@ var player_data: Dictionary
 
 func _init(data: Dictionary) -> void:
 	player_data = data
+	# Migrate saved progress from the previous four-step lesson to the new
+	# five-step flow, inserting the explicit ingredient-loading step.
+	var lesson_version := int(player_data.get("cooking_lesson_version", 1))
+	if lesson_version < 2:
+		var old_stage := int(player_data.get("cooking_lesson_stage", 0))
+		var stage_migration := {0: 0, 1: 1, 2: 3, 3: 4}
+		player_data["cooking_lesson_stage"] = int(stage_migration.get(old_stage, 0))
+		player_data["cooking_lesson_version"] = 2
 	if not player_data.has("cooking_lesson_stage"):
 		player_data["cooking_lesson_stage"] = 0
 	if not player_data.has("cooking_lesson_quality"):
