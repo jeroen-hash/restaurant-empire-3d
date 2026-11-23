@@ -27,3 +27,16 @@ Record:
 - Exact error text, if any:
 
 Only after this checkpoint should we add gameplay classes and create the first kitchen map. Do not delete the existing Godot project or change the repository `main` branch.
+
+
+## Required Windows C++ toolchain
+
+Visual Studio Code is not the same product as Visual Studio. VS Code is an editor and does not by itself provide the MSVC compiler and Windows SDK required to build this Unreal C++ project.
+
+Install **Visual Studio Community** from Microsoft's official Visual Studio downloads page. In the Visual Studio Installer, select the **Game development with C++** workload. Ensure the MSVC C++ build tools and a Windows SDK are selected. Then finish installation and restart Windows if requested.
+
+Official Microsoft guidance:
+- https://visualstudio.microsoft.com/downloads/
+- https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community
+
+Do not try to compile the Unreal project until this toolchain installation is complete.
