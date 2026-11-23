@@ -433,7 +433,22 @@ async function loadCharacter(){
         const n=clip.name.toLowerCase();
         if(!walkClip&&(n.includes('walk')||n.includes('locomotion')||n.includes('run')))walkClip=clip;
       }
-      if(walkClip)playerActions.walk=playerMixer.clipAction(walkClip);
+      if(walkClip){
+        // Prevent vertical root/hip motion in the walk cycle from pulling
+        // the whole body and feet below the floor. Keep the first Y value
+        // while preserving horizontal motion and all limb animation.
+        for(const track of walkClip.tracks){
+          const trackName=track.name.toLowerCase();
+          if(trackName.includes('position')&&/(hips|pelvis|root)/.test(trackName)){
+            const values=track.values;
+            if(values&&values.length>=3){
+              const baseY=values[1];
+              for(let index=1;index<values.length;index+=3)values[index]=baseY;
+            }
+          }
+        }
+        playerActions.walk=playerMixer.clipAction(walkClip);
+      }
       setStatus('Personage geladen');
       return true;
     }catch(e){
