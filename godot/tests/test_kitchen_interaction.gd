@@ -15,7 +15,7 @@ func _run_tests() -> void:
 	root.add_child(game)
 	await process_frame
 	game.player.set_spawn_position(Vector3(-25.0, 0.0, -5.0))
-	var button: Button = game.get_node_or_null("HUD/KitchenInteractButton")
+	var button: Button = game.get_node_or_null("HUD/KitchenActionBar/KitchenInteractButton")
 	_assert(button != null, "Dedicated kitchen interaction button exists")
 	if button != null:
 		_assert(button.get_parent().name == "KitchenActionBar", "Kitchen action buttons are in a dedicated touch bar")
