@@ -52,8 +52,10 @@ jobs:
       - name: Install Godot Web export templates
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz -O export_templates.tpz
-          mkdir -p "$HOME/.local/share/godot/export_templates/4.4.1.stable"
-          unzip -q export_templates.tpz -d "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+          mkdir -p "$RUNNER_TEMP/godot-export-templates" "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+          unzip -q export_templates.tpz -d "$RUNNER_TEMP/godot-export-templates"
+          cp -a "$RUNNER_TEMP/godot-export-templates/templates/." "$HOME/.local/share/godot/export_templates/4.4.1.stable/"
+          ls -la "$HOME/.local/share/godot/export_templates/4.4.1.stable"
 
       - name: Export Web test build
         run: |
