@@ -10,7 +10,7 @@ var player_data: Dictionary = {
 	"cash": 250.0,
 	"day": 1,
 	"game_minutes": 8 * 60,
-	"position": {"x": 0.0, "y": 0.0, "z": 5.0}
+	"position": {"x": -22.0, "y": 0.0, "z": -5.3}
 }
 
 var restaurant_data: Dictionary = {
