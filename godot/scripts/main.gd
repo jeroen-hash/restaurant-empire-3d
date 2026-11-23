@@ -16,6 +16,7 @@ var world: WorldBuilder
 var clock_accumulator := 0.0
 var autosave_accumulator := 0.0
 var pause_button: Button
+var camera_button: Button
 var game_paused := false
 
 func _ready() -> void:
@@ -132,6 +133,11 @@ func _build_hud() -> void:
 	exam_button.pressed.connect(_on_take_exam)
 	column.add_child(exam_button)
 
+	camera_button = Button.new()
+	camera_button.text = "EERSTE PERSOON"
+	camera_button.pressed.connect(_toggle_camera)
+	column.add_child(camera_button)
+
 	pause_button = Button.new()
 	pause_button.text = "PAUZE"
 	pause_button.pressed.connect(_toggle_pause)
@@ -179,6 +185,13 @@ func _is_at_culinary_school() -> bool:
 func _refresh_education_ui() -> void:
 	if is_instance_valid(education_label):
 		education_label.text = education.get_summary()
+
+func _toggle_camera() -> void:
+	if player == null:
+		return
+	var first_person: bool = player.toggle_camera_mode()
+	if is_instance_valid(camera_button):
+		camera_button.text = "DERDE PERSOON" if first_person else "EERSTE PERSOON"
 
 func _toggle_pause() -> void:
 	game_paused = not game_paused
