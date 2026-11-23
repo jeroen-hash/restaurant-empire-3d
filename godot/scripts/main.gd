@@ -18,6 +18,7 @@ var save_label: Label
 var world: WorldBuilder
 var clock_accumulator := 0.0
 var autosave_accumulator := 0.0
+var interact_button: Button
 var pause_button: Button
 var camera_button: Button
 var game_paused := false
@@ -161,6 +162,11 @@ func _build_hud() -> void:
 	exam_button.pressed.connect(_on_take_exam)
 	column.add_child(exam_button)
 
+	interact_button = Button.new()
+	interact_button.text = "INTERACTIE · VOLGENDE KOOKSTAP"
+	interact_button.pressed.connect(_on_interact_with_kitchen)
+	column.add_child(interact_button)
+
 	camera_button = Button.new()
 	camera_button.text = "EERSTE PERSOON"
 	camera_button.pressed.connect(_toggle_camera)
@@ -195,6 +201,19 @@ func _add_cooking_button(parent: GridContainer, label_text: String, action: Stri
 	action_button.text = label_text
 	action_button.pressed.connect(_on_cooking_action.bind(action))
 	parent.add_child(action_button)
+
+func _on_interact_with_kitchen() -> void:
+	if player == null:
+		return
+	var kitchen_center := Vector3(-22.0, 0.0, -9.0)
+	if player.global_position.distance_to(kitchen_center) > 5.5:
+		message_label.text = "Loop eerst naar een werkpost in de ANIMO Culinary School."
+		return
+	var next_action := str(cooking_lesson.get_next_action())
+	if next_action == "":
+		message_label.text = "Deze praktijkopdracht is afgerond."
+		return
+	_on_cooking_action(next_action)
 
 func _on_cooking_action(action: String) -> void:
 	if not _is_at_culinary_school():
