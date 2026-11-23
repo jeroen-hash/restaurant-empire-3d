@@ -2,14 +2,17 @@ extends Node3D
 
 const WorldBuilderScript = preload("res://scripts/world_builder.gd")
 const PlayerControllerScript = preload("res://scripts/player_controller.gd")
+const EconomyScript = preload("res://scripts/restaurant_economy.gd")
 
 var player: PlayerController
+var economy
 var status_label: Label
 var save_label: Label
 
 func _ready() -> void:
 	_setup_input()
 	GameState.load_game()
+	economy = EconomyScript.new(GameState.player_data, GameState.restaurant_data)
 	var world := WorldBuilderScript.new()
 	world.name = "World"
 	add_child(world)
