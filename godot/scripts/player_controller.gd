@@ -22,6 +22,7 @@ var spawn_safety_position := Vector3(-25.0, 0.0, -5.0)
 
 var camera_pivot: Node3D
 var camera: Camera3D
+var camera_arm: SpringArm3D
 var character: Node3D
 var left_arm: Node3D
 var right_arm: Node3D
@@ -52,11 +53,20 @@ func _ready() -> void:
 	camera_pivot.position = Vector3(0, 1.35, 0)
 	add_child(camera_pivot)
 
+	camera_arm = SpringArm3D.new()
+	camera_arm.name = "CameraCollisionArm"
+	camera_arm.spring_length = camera_distance
+	camera_arm.margin = 0.18
+	camera_arm.collision_mask = 1
+	camera_arm.position = Vector3(0, 0.10, 0)
+	camera_pivot.add_child(camera_arm)
+	camera_arm.add_excluded_object(get_rid())
+
 	camera = Camera3D.new()
 	camera.name = "ThirdPersonCamera"
-	camera.position = Vector3(0, 0.10, camera_distance)
+	camera.position = Vector3.ZERO
 	camera.fov = 52.0
-	camera_pivot.add_child(camera)
+	camera_arm.add_child(camera)
 	camera.current = true
 	_build_touch_controls()
 
@@ -82,11 +92,11 @@ func toggle_camera_mode() -> bool:
 	first_person = not first_person
 	if first_person:
 		camera_pivot.position = Vector3(0, 1.48, 0)
-		camera.position = Vector3(0, 0, 0.08)
+		camera_arm.spring_length = 0.08
 		character.visible = false
 	else:
 		camera_pivot.position = Vector3(0, 1.35, 0)
-		camera.position = Vector3(0, 0.10, camera_distance)
+		camera_arm.spring_length = camera_distance
 		character.visible = true
 	return first_person
 
