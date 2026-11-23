@@ -12,6 +12,7 @@ var education
 var cooking_lesson
 var status_label: Label
 var education_label: Label
+var cooking_label: Label
 var message_label: Label
 var save_label: Label
 var world: WorldBuilder
@@ -116,8 +117,12 @@ func _build_hud() -> void:
 	column.add_child(status_label)
 	education_label = Label.new()
 	column.add_child(education_label)
+	cooking_label = Label.new()
+	cooking_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(cooking_label)
 	message_label = Label.new()
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	message_label.text = "Start je praktijkopdracht met: " + cooking_lesson.get_next_action_label() + "."
 	column.add_child(message_label)
 
 	var study_row := HBoxContainer.new()
@@ -209,6 +214,8 @@ func _is_at_culinary_school() -> bool:
 func _refresh_education_ui() -> void:
 	if is_instance_valid(education_label):
 		education_label.text = education.get_summary()
+	if is_instance_valid(cooking_label):
+		cooking_label.text = cooking_lesson.get_summary()
 
 func _toggle_camera() -> void:
 	if player == null:
