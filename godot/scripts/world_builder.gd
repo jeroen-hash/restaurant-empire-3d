@@ -1,6 +1,9 @@
 extends Node3D
 class_name WorldBuilder
-## First detailed environment pass: Belgian street frontage and a furnished ANIMO café.
+## Belgian street frontage and a furnished ANIMO café.
+
+var sun_light: DirectionalLight3D
+var world_environment: WorldEnvironment
 
 func _ready() -> void:
 	_build_lighting()
@@ -76,7 +79,7 @@ func _label(parent: Node3D, text_value: String, pos: Vector3, size := 0.34, colo
 	parent.add_child(label)
 
 func _build_lighting() -> void:
-	var world_environment := WorldEnvironment.new()
+	world_environment = WorldEnvironment.new()
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_SKY
 	environment.sky = Sky.new()
@@ -88,12 +91,13 @@ func _build_lighting() -> void:
 	world_environment.environment = environment
 	add_child(world_environment)
 
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-48, -32, 0)
-	sun.light_energy = 1.05
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 38.0
-	add_child(sun)
+	sun_light = DirectionalLight3D.new()
+	sun_light.rotation_degrees = Vector3(-48, -32, 0)
+	sun_light.light_energy = 1.05
+	sun_light.shadow_enabled = true
+	sun_light.directional_shadow_max_distance = 38.0
+	add_child(sun_light)
+	set_game_time(8 * 60)
 
 func _build_street() -> void:
 	_box(self, "Road", Vector3(0, -0.18, 3), Vector3(42, 0.3, 32), Color(0.105, 0.115, 0.12))
@@ -255,3 +259,13 @@ func _build_cafe() -> void:
 	_box(cafe, "MenuBoard", Vector3(-4.9, 2.65, -4.62), Vector3(1.15, 1.25, 0.08), Color(0.055, 0.075, 0.065), false)
 	_label(cafe, "MENU", Vector3(-4.9, 2.86, -4.55), 0.17)
 	_label(cafe, "KOFFIE  •  LUNCH  •  TAART", Vector3(-4.9, 2.48, -4.54), 0.075, Color(0.83, 0.76, 0.61))
+
+func set_game_time(minutes: int) -> void:
+	if sun_light == null or world_environment == null:
+		return
+	var minute_of_day := posmod(minutes, 1440)
+	var phase := float(minute_of_day) / 1440.0 * TAU
+	var daylight := clampf((sin(phase - PI * 0.5) + 0.12) / 0.78, 0.0, 1.0)
+	sun_light.rotation_degrees.x = cos(phase) * 68.0
+	sun_light.light_energy = lerpf(0.10, 1.05, daylight)
+	world_environment.environment.ambient_light_energy = lerpf(0.18, 0.72, daylight)
