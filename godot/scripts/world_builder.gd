@@ -185,6 +185,22 @@ func _build_culinary_school() -> void:
 	else:
 		push_error("De professionele 3D-keuken ontbreekt. Geen blokkenkeuken als vervanging tonen.")
 
+	# Gameplay anchors are separate from the imported visual model. The previous
+	# scene had no nodes with these names, so the cooking system could never find
+	# its stations even though the kitchen model was present.
+	var station_data := [
+		{"name": "ANIMO_Workstation_SNIJDEN", "position": Vector3(-3.0, 0.0, 2.25), "action": "prepare"},
+		{"name": "ANIMO_Workstation_GAREN", "position": Vector3(-1.0, 0.0, 2.25), "action": "cook"},
+		{"name": "ANIMO_Workstation_KRUIDEN", "position": Vector3(1.0, 0.0, 2.25), "action": "season"},
+		{"name": "ANIMO_Workstation_DRESSEREN", "position": Vector3(3.0, 0.0, 2.25), "action": "plate"}
+	]
+	for station_info in station_data:
+		var station_anchor := Node3D.new()
+		station_anchor.name = str(station_info["name"])
+		station_anchor.position = station_info["position"]
+		station_anchor.set_meta("cooking_action", station_info["action"])
+		school.add_child(station_anchor)
+
 	# Labels identify the practical zones; the actual equipment comes from
 	# the imported 3D kitchen asset, never from primitive box furniture.
 	var zone_data := [
