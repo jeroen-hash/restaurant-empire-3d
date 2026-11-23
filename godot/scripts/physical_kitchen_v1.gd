@@ -69,6 +69,36 @@ func setup_player(value: PlayerController) -> void:
 func has_interactable_target() -> bool:
 	return is_instance_valid(player) and not _camera_hit().is_empty()
 
+func get_context_action_label() -> String:
+	if not is_instance_valid(player):
+		return "KIJK NAAR EEN WERKPOST"
+	var hit := _camera_hit()
+	if hit.is_empty():
+		return "KIJK NAAR EEN WERKPOST"
+	var collider: Object = hit.get("collider")
+	if is_instance_valid(held_item):
+		if collider == board_area and held_item_id == "knife" and board_placed and board_has_ingredient:
+			return "SNIJDEN"
+		if collider == board_area and held_item_id == "board":
+			return "SNIJPLANK PLAATSEN"
+		if collider == board_area and held_item_id in ["chicken", "carrot", "potato"]:
+			return "INGREDIËNT PLAATSEN"
+		if collider == hob_area and held_item_id == "pan":
+			return "PAN OP KOOKPLAAT"
+		if collider == tool_rack_area and held_item_id == "knife":
+			return "MES TERUGLEGGEN"
+		return "VOORWERP NEERLEGGEN"
+	var target := collider as Node3D
+	if target != null:
+		var item_id := str(target.get_meta("item_id", ""))
+		if item_id != "":
+			return "PAK " + _item_label(item_id).to_upper()
+	if collider == board_area and board_has_ingredient and not bool(prepared_ingredients.get(board_ingredient_id, false)):
+		return "NEEM EERST HET MES"
+	if collider == hob_area and chicken_in_pan:
+		return "VUURSTAND INSTELLEN"
+	return "GEBRUIKEN"
+
 func handle_interaction() -> bool:
 	if not is_instance_valid(player) or not is_instance_valid(player.camera):
 		return false
