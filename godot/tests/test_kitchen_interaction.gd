@@ -24,7 +24,9 @@ func _run_tests() -> void:
 		_assert(button.custom_minimum_size.y >= 50.0, "Kitchen interaction button is large enough for touch")
 	var nearest: Dictionary = game._get_nearest_cooking_station(game.player.global_position)
 	_assert(float(nearest.get("distance", INF)) <= 2.6, "Starting position is within reach of the first cooking station")
-	game._on_interact_with_kitchen()
+	await process_frame
+	_assert(not button.disabled, "Kitchen action button activates when the player reaches a workstation")
+	button.pressed.emit()
 	_assert(game.cooking_challenge_active, "Touch interaction starts the first cooking action")
 	_assert(game.player.is_working, "Player enters working state during the cooking action")
 	if failures == 0:
