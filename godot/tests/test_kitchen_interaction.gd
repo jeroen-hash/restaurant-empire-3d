@@ -21,9 +21,10 @@ func _run_tests() -> void:
 		# The previous test only teleported the player and never pointed the camera
 		# at the target, so it was testing an unrelated empty ray.
 		var board_position: Vector3 = kitchen.board_area.global_position
-		game.player.set_spawn_position(board_position + Vector3(0.0, 0.0, 1.8))
+		game.player.set_spawn_position(Vector3(board_position.x, 0.0, board_position.z + 1.8))
 		game.player.camera_arm.spring_length = 0.08
-		game.player.camera_pivot.look_at(board_position + Vector3(0.0, 0.04, 0.0), Vector3.UP)
+		game.player.camera_yaw = 0.0
+		game.player.camera_pitch = atan2(-0.33, 1.8)
 		await physics_frame
 		await process_frame
 	var button: Button = game.get_node_or_null("HUD/KitchenContextButton")
