@@ -98,7 +98,7 @@ func calculate_recipe_cost(recipe_id: String) -> Dictionary:
 func prepare_and_sell(recipe_id: String) -> Dictionary:
 	var costing := calculate_recipe_cost(recipe_id)
 	if not costing["ok"]:
-		return _failure("Niet genoeg voorraad of ingrediënten ontbreken: %s" % ", ".join(costing["missing_ingredients"]))
+		return _failure("Niet genoeg voorraad of ingrediënten ontbreken: %s" % str(costing["missing_ingredients"]))
 	var recipe: Dictionary = restaurant_data["recipes"][recipe_id]
 	var stock: Dictionary = restaurant_data["stock"]
 	for item_id in recipe["ingredients"]:
