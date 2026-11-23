@@ -49,6 +49,7 @@ func _ready() -> void:
 	camera.fov = 62.0
 	camera_pivot.add_child(camera)
 	camera.current = true
+	_build_touch_controls()
 
 func _mat(color: Color, roughness := 0.78) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
@@ -253,3 +254,57 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func set_spawn_position(pos: Vector3) -> void:
 	global_position = pos
+
+
+func _build_touch_controls() -> void:
+	# Subtle on-screen guidance for touch devices; movement/look input remains handled above.
+	var layer := CanvasLayer.new()
+	layer.name = "TouchControls"
+	layer.layer = 5
+	add_child(layer)
+
+	var base := Panel.new()
+	base.name = "MoveJoystickBase"
+	base.position = Vector2(24, get_viewport().get_visible_rect().size.y - 164)
+	base.size = Vector2(132, 132)
+	var base_style := StyleBoxFlat.new()
+	base_style.bg_color = Color(0.08, 0.10, 0.09, 0.34)
+	base_style.border_color = Color(0.88, 0.82, 0.68, 0.55)
+	base_style.set_border_width_all(2)
+	base_style.set_corner_radius_all(66)
+	base.add_theme_stylebox_override("panel", base_style)
+	layer.add_child(base)
+
+	var knob := Panel.new()
+	knob.name = "MoveJoystickKnob"
+	knob.position = Vector2(42, 42)
+	knob.size = Vector2(48, 48)
+	var knob_style := StyleBoxFlat.new()
+	knob_style.bg_color = Color(0.82, 0.75, 0.61, 0.72)
+	knob_style.border_color = Color(1.0, 0.96, 0.86, 0.8)
+	knob_style.set_border_width_all(1)
+	knob_style.set_corner_radius_all(24)
+	knob.add_theme_stylebox_override("panel", knob_style)
+	base.add_child(knob)
+
+	var move_label := Label.new()
+	move_label.text = "BEWEGEN"
+	move_label.position = Vector2(38, 136)
+	move_label.add_theme_font_size_override("font_size", 13)
+	move_label.add_theme_color_override("font_color", Color(0.95, 0.91, 0.82, 0.88))
+	layer.add_child(move_label)
+
+	var look_label := Label.new()
+	look_label.text = "SLEEP RECHTS OM CAMERA TE DRAAIEN"
+	look_label.anchor_left = 1.0
+	look_label.anchor_right = 1.0
+	look_label.anchor_top = 1.0
+	look_label.anchor_bottom = 1.0
+	look_label.offset_left = -250
+	look_label.offset_right = -18
+	look_label.offset_top = -48
+	look_label.offset_bottom = -20
+	look_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	look_label.add_theme_font_size_override("font_size", 11)
+	look_label.add_theme_color_override("font_color", Color(0.95, 0.91, 0.82, 0.82))
+	layer.add_child(look_label)
