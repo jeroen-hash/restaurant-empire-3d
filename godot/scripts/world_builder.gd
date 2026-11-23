@@ -442,7 +442,7 @@ func show_cooking_action(action: String) -> void:
 			var spice := _box(visual, "Seasoning_%02d" % i, Vector3(-0.18 + float(i) * 0.12, 1.20, -0.08 + float(i % 2) * 0.12), Vector3(0.055, 0.025, 0.055), Color(0.76, 0.56, 0.20) if i % 2 == 0 else Color(0.34, 0.43, 0.20), false)
 	elif action.begins_with("plate_"):
 		var plate_station := station
-		if not plate_station.has_node("ActionVisual_plate_main"):
+		if not plate_station.has_node("ActionVisual_plate_base"):
 			var base := Node3D.new()
 			base.name = "ActionVisual_plate_base"
 			plate_station.add_child(base)
