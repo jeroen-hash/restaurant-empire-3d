@@ -74,6 +74,3 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
