@@ -5,11 +5,13 @@ const PlayerControllerScript = preload("res://scripts/player_controller.gd")
 const EconomyScript = preload("res://scripts/restaurant_economy.gd")
 const EducationScript = preload("res://scripts/education_progression.gd")
 const CookingLessonScript = preload("res://scripts/cooking_lesson.gd")
+const KitchenInteractionScript = preload("res://scripts/kitchen_interaction.gd")
 
 var player: PlayerController
 var economy
 var education
 var cooking_lesson
+var kitchen_interaction
 var status_label: Label
 var education_label: Label
 var cooking_label: Label
@@ -51,6 +53,10 @@ func _ready() -> void:
 		float(saved_position.get("z", 5.0))
 	))
 	_build_hud()
+	kitchen_interaction = KitchenInteractionScript.new()
+	kitchen_interaction.name = "KitchenInteraction"
+	add_child(kitchen_interaction)
+	kitchen_interaction.setup(player, GameState.player_data, get_node("HUD") as CanvasLayer)
 	_refresh_education_ui()
 
 func _process(delta: float) -> void:
@@ -77,6 +83,12 @@ func _process(delta: float) -> void:
 				contextual_button.visible = action_distance <= 2.8
 				contextual_button.disabled = not contextual_button.visible
 				contextual_button.text = _context_label(next_action)
+			if kitchen_interaction != null and not cooking_challenge_active:
+				var kitchen_context: Dictionary = kitchen_interaction.get_context()
+				if not kitchen_context.is_empty():
+					contextual_button.visible = true
+					contextual_button.disabled = false
+					contextual_button.text = str(kitchen_context.get("label", "INTERACTIE"))
 
 	# Automatisch bewaren, ook als de speler lang bezig is.
 	autosave_accumulator += delta
@@ -303,6 +315,11 @@ func _on_context_button_pressed() -> void:
 	if cooking_challenge_active:
 		_finish_cooking_challenge()
 		return
+	if kitchen_interaction != null and not kitchen_interaction.get_context().is_empty():
+		kitchen_interaction.interact()
+		message_label.text = kitchen_interaction.get_last_message()
+		_save_now()
+		return
 	var action := str(cooking_lesson.get_next_action())
 	_on_station_button(action)
 
@@ -328,6 +345,11 @@ func _get_cooking_station(action: String) -> Dictionary:
 
 func _on_interact_with_kitchen() -> void:
 	if player == null:
+		return
+	if kitchen_interaction != null and not kitchen_interaction.get_context().is_empty():
+		kitchen_interaction.interact()
+		message_label.text = kitchen_interaction.get_last_message()
+		_save_now()
 		return
 	if cooking_challenge_active:
 		_finish_cooking_challenge()
