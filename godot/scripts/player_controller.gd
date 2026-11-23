@@ -10,6 +10,7 @@ class_name PlayerController
 @export var camera_distance := 2.0
 var first_person := false
 var is_working := false
+var working_action := "prepare"
 var character_type := "man"
 
 var camera_yaw := 0.0
@@ -83,12 +84,24 @@ func set_character_type(value: String) -> void:
 			character.visible = false
 
 func set_working(value: bool) -> void:
+	set_working_action(working_action, value)
+
+func set_working_action(action: String, value := true) -> void:
+	working_action = action
 	is_working = value
 	if value:
 		touch_move = Vector2.ZERO
 		velocity.x = 0.0
 		velocity.z = 0.0
 		_play_character_animation("idle")
+	else:
+		if is_instance_valid(character):
+			character.position.y = 0.0
+			character.rotation.z = 0.0
+		if left_arm != null:
+			left_arm.rotation = Vector3.ZERO
+		if right_arm != null:
+			right_arm.rotation = Vector3.ZERO
 
 func toggle_camera_mode() -> bool:
 	first_person = not first_person
@@ -362,11 +375,25 @@ func _animate_character(delta: float, speed: float) -> void:
 	if _animation_player != null:
 		return
 	if is_working:
-		walk_clock += delta * 8.0
-		left_arm.rotation.x = -0.48 + sin(walk_clock * 2.0) * 0.16
-		right_arm.rotation.x = -0.68 + sin(walk_clock * 2.0 + PI) * 0.22
-		left_arm.rotation.z = -0.08
-		right_arm.rotation.z = 0.08
+		# Practical hand-action motion for the articulated fallback chef.
+		# The dominant arm performs a repeated short working stroke while the
+		# other arm stays forward to steady the ingredient or cookware.
+		walk_clock += delta * (11.5 if working_action == "prepare" else 5.8)
+		var stroke := sin(walk_clock)
+		left_arm.rotation.x = -0.82 + (stroke * 0.045 if working_action == "prepare" else sin(walk_clock * 0.5) * 0.08)
+		left_arm.rotation.z = -0.12
+		if working_action == "prepare":
+			right_arm.rotation.x = -1.12 + maxf(0.0, stroke) * 0.52
+			right_arm.rotation.z = 0.10
+		elif working_action in ["cook", "load_pan"]:
+			right_arm.rotation.x = -0.92 + stroke * 0.28
+			right_arm.rotation.z = 0.16 + stroke * 0.10
+		elif working_action == "season":
+			right_arm.rotation.x = -0.72 + stroke * 0.18
+			right_arm.rotation.z = 0.24 + stroke * 0.08
+		else:
+			right_arm.rotation.x = -0.88 + stroke * 0.12
+			right_arm.rotation.z = 0.12
 		return
 	left_arm.rotation.z = 0.0
 	right_arm.rotation.z = 0.0
