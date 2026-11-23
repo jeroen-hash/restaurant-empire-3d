@@ -109,9 +109,10 @@ func _notification(what: int) -> void:
 		_save_now()
 
 func _setup_input() -> void:
-	_add_key_action("move_forward", [KEY_W, KEY_UP])
+	# Support both QWERTY (WASD) and Belgian AZERTY (ZQSD) keyboards.
+	_add_key_action("move_forward", [KEY_W, KEY_Z, KEY_UP])
 	_add_key_action("move_back", [KEY_S, KEY_DOWN])
-	_add_key_action("move_left", [KEY_A, KEY_LEFT])
+	_add_key_action("move_left", [KEY_A, KEY_Q, KEY_LEFT])
 	_add_key_action("move_right", [KEY_D, KEY_RIGHT])
 	_add_key_action("interact", [KEY_E])
 
@@ -121,6 +122,7 @@ func _add_key_action(action: String, keys: Array) -> void:
 	for keycode in keys:
 		var event := InputEventKey.new()
 		event.physical_keycode = keycode
+		event.keycode = keycode
 		InputMap.action_add_event(action, event)
 
 func _build_hud() -> void:
