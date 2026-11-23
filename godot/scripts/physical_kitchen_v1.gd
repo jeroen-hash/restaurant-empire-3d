@@ -32,6 +32,9 @@ func setup_player(value: PlayerController) -> void:
 	hand_anchor.position = Vector3(0.0, -0.62, -0.28)
 	player.right_arm.add_child(hand_anchor)
 
+func has_interactable_target() -> bool:
+	return is_instance_valid(player) and not _camera_hit().is_empty()
+
 func handle_interaction() -> bool:
 	if not is_instance_valid(player) or not is_instance_valid(player.camera):
 		return false
