@@ -93,4 +93,4 @@ jobs:
           git add real-game-test/
           git commit -m "Publish full RESTAURANT EMPIRE 3D iPhone test" || exit 0
           git push origin HEAD:rebuild/visual-foundation
-# Rebuild trigger: validate latest real-kitchen source commit.
+# Rebuild trigger: validate latest real-kitchen source and camera test.
