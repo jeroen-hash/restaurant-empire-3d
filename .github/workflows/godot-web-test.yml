@@ -41,6 +41,12 @@ jobs:
           unzip -q templates.tpz -d templates
           cp -a templates/templates/. "$HOME/.local/share/godot/export_templates/4.4.1.stable/"
 
+      - name: Download licensed rigged character asset
+        run: |
+          mkdir -p godot/assets/characters
+          curl -fL --retry 3 https://models.vinish.dev/people/casual-man.glb -o godot/assets/characters/casual-man.glb
+          test -s godot/assets/characters/casual-man.glb
+
       - name: Import and parse Godot project
         run: godot --headless --editor --path godot --quit
 
