@@ -1,0 +1,58 @@
+name: Build minimal iPhone diagnostic
+
+on:
+  push:
+    branches:
+      - rebuild/visual-foundation
+    paths:
+      - "diagnostic/**"
+      - ".github/workflows/build-iphone-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: iphone-diagnostic
+  cancel-in-progress: true
+
+jobs:
+  export-diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out diagnostic source
+        uses: actions/checkout@v4
+        with:
+          ref: rebuild/visual-foundation
+
+      - name: Install Godot 4.5.1 editor
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_linux.x86_64.zip -O godot.zip
+          unzip -q godot.zip -d godot-bin
+          chmod +x godot-bin/Godot_v4.5.1-stable_linux.x86_64
+          sudo mv godot-bin/Godot_v4.5.1-stable_linux.x86_64 /usr/local/bin/godot
+          wget -q https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_export_templates.tpz -O export_templates.tpz
+          mkdir -p "$RUNNER_TEMP/godot-templates" "$HOME/.local/share/godot/export_templates/4.5.1.stable"
+          unzip -q export_templates.tpz -d "$RUNNER_TEMP/godot-templates"
+          cp -a "$RUNNER_TEMP/godot-templates/templates/." "$HOME/.local/share/godot/export_templates/4.5.1.stable/"
+
+      - name: Export minimal Web diagnostic
+        run: |
+          mkdir -p diagnostic-site
+          godot --headless --editor --path diagnostic --quit
+          godot --headless --path diagnostic --export-release "Web" "$GITHUB_WORKSPACE/diagnostic-site/index.html"
+          test -s diagnostic-site/index.html
+          test -s diagnostic-site/index.wasm
+          test -s diagnostic-site/index.pck
+          cat > diagnostic-site/README.txt <<'EOF'
+          RESTAURANT EMPIRE 3D - Minimal iPhone diagnostic
+          This test contains only a simple 3D scene, a rotating cube and a touch button.
+          EOF
+
+      - name: Publish diagnostic files into the test branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostic-site/
+          git commit -m "Publish minimal iPhone diagnostic build" || exit 0
+          git push origin HEAD:rebuild/visual-foundation
