@@ -61,6 +61,8 @@ func set_character_type(value: String) -> void:
 			character.queue_free()
 		_animation_player = null
 		_build_humanoid()
+		if first_person:
+			character.visible = false
 
 func toggle_camera_mode() -> bool:
 	first_person = not first_person
