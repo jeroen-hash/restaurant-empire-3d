@@ -27,6 +27,12 @@ func _run_tests() -> void:
 		game.player.camera_pitch = atan2(-0.33, 1.8)
 		await physics_frame
 		await process_frame
+		# Aim the active camera directly at the board after the camera rig updates.
+		# This avoids relying on controller yaw conventions in headless runs.
+		if is_instance_valid(game.player.camera):
+			game.player.camera.look_at(kitchen.board_area.global_position, Vector3.UP)
+		await physics_frame
+		await process_frame
 	var button: Button = game.get_node_or_null("HUD/KitchenContextButton")
 	_assert(button != null, "Single contextual kitchen button exists")
 	if button != null:
