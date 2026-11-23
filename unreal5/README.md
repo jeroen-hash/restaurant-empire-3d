@@ -6,6 +6,9 @@ This is the separate Unreal Engine 5 implementation. The existing Godot prototyp
 
 - [x] Dedicated `unreal5/vertical-slice` branch created from `main`.
 - [x] Initial Unreal C++ project descriptor and game module scaffold added.
+- [x] First editor-session checklist prepared.
+- [x] Technical architecture and vertical-slice acceptance criteria documented.
+- [x] Licensed asset sourcing and tracking rules documented.
 - [ ] Open and compile with the user's installed Unreal Engine version.
 - [ ] Build the first playable kitchen vertical slice.
 - [ ] Verify visuals, controls, and performance on target hardware.
