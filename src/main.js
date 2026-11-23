@@ -425,17 +425,15 @@ async function loadCharacter(){
       playerRoot.add(model);
       fallbackAvatar.visible=false;
       playerMixer=new THREE.AnimationMixer(model);
-      let idleClip=null,walkClip=null;
+      // Do not blindly play a clip called "idle": the supplied asset's idle
+      // clip can contain a low/crouched pose. Keep the model's upright rest
+      // pose while standing and use only an explicitly named locomotion clip.
+      let walkClip=null;
       for(const clip of gltf.animations){
         const n=clip.name.toLowerCase();
-        if(!idleClip&&n.includes('idle'))idleClip=clip;
         if(!walkClip&&(n.includes('walk')||n.includes('locomotion')||n.includes('run')))walkClip=clip;
       }
-      if(!idleClip&&gltf.animations.length)idleClip=gltf.animations[0];
-      if(!walkClip)walkClip=idleClip;
-      if(idleClip)playerActions.idle=playerMixer.clipAction(idleClip);
       if(walkClip)playerActions.walk=playerMixer.clipAction(walkClip);
-      if(playerActions.idle)playAction('idle');
       setStatus('Personage geladen');
       return true;
     }catch(e){
@@ -451,7 +449,18 @@ async function loadCharacter(){
   return false;
 }
 
-function playAction(name){const next=playerActions[name];if(!next||activeAction===next)return;if(activeAction)activeAction.fadeOut(.18);next.reset().fadeIn(.18).play();activeAction=next}
+function playAction(name){
+  const next=playerActions[name];
+  if(!next){
+    // Fade out locomotion to restore the model's upright rest pose.
+    if(activeAction){activeAction.fadeOut(.16);activeAction=null}
+    return;
+  }
+  if(activeAction===next)return;
+  if(activeAction)activeAction.fadeOut(.18);
+  next.reset().fadeIn(.18).play();
+  activeAction=next;
+}
 function setMovement(x,y){moveX=x;moveY=y}
 function updatePlayer(dt){
   const forward=new THREE.Vector3(Math.sin(yaw),0,-Math.cos(yaw));
