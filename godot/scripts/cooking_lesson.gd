@@ -1,13 +1,14 @@
 extends RefCounted
 class_name CookingLesson
-## Practical kitchen exercise: prepare, cook, season and plate in the correct order.
+## Practical kitchen exercise with an explicit ingredient-loading step.
 
-const ACTIONS := ["prepare", "cook", "season", "plate"]
+const ACTIONS := ["prepare", "load_pan", "cook", "season", "plate"]
 const ACTION_LABELS := {
-	"prepare": "Snijden en voorbereiden",
-	"cook": "Garen",
+	"prepare": "Ingrediënten snijden en voorbereiden",
+	"load_pan": "De gesneden ingrediënten in de pan doen",
+	"cook": "De ingrediënten garen",
 	"season": "Kruiden en proeven",
-	"plate": "Dresseren en doorgeven"
+	"plate": "Het gerecht zelf dresseren"
 }
 
 var player_data: Dictionary
@@ -20,6 +21,8 @@ func _init(data: Dictionary) -> void:
 		player_data["cooking_lesson_quality"] = 100
 	if not player_data.has("cooking_lessons_completed"):
 		player_data["cooking_lessons_completed"] = 0
+	if not player_data.has("cooking_pan_loaded"):
+		player_data["cooking_pan_loaded"] = false
 
 func perform_action(action: String, education, execution_quality := 100) -> Dictionary:
 	var stage := int(player_data.get("cooking_lesson_stage", 0))
@@ -29,17 +32,17 @@ func perform_action(action: String, education, execution_quality := 100) -> Dict
 		player_data["cooking_lesson_stage"] = 0
 	if not ACTIONS.has(action):
 		return {"ok": false, "message": "Deze keukenhandeling bestaat niet."}
+	if action == "cook" and not bool(player_data.get("cooking_pan_loaded", false)):
+		return {"ok": false, "message": "Je kunt nog niet garen: doe eerst de gesneden ingrediënten in de pan."}
 	if action != ACTIONS[stage]:
-		quality = maxi(0, quality - 15)
-		player_data["cooking_lesson_quality"] = quality
 		return {
 			"ok": false,
 			"complete": false,
 			"quality": quality,
-			"message": "Niet de juiste volgorde. Volgende stap: %s." % ACTION_LABELS[ACTIONS[stage]]
+			"message": "Nog niet. Volgende stap: %s." % ACTION_LABELS[ACTIONS[stage]]
 		}
-
-	# The practical grade combines process quality with the player's timing in the hands-on station challenge.
+	if action == "load_pan":
+		player_data["cooking_pan_loaded"] = true
 	quality = clampi(roundi(float(quality) * 0.65 + float(clampi(int(execution_quality), 0, 100)) * 0.35), 0, 100)
 	player_data["cooking_lesson_quality"] = quality
 	stage += 1
@@ -60,6 +63,7 @@ func perform_action(action: String, education, execution_quality := 100) -> Dict
 	player_data["last_cooking_quality"] = quality
 	player_data["cooking_lesson_stage"] = 0
 	player_data["cooking_lesson_quality"] = 100
+	player_data["cooking_pan_loaded"] = false
 	return {
 		"ok": true,
 		"complete": true,
@@ -71,7 +75,7 @@ func perform_action(action: String, education, execution_quality := 100) -> Dict
 
 func get_summary() -> String:
 	var stage := clampi(int(player_data.get("cooking_lesson_stage", 0)), 0, ACTIONS.size() - 1)
-	return "Praktijkopdracht · Stap %d/4 · Kwaliteit %d/100 · Volgende: %s" % [
+	return "Praktijkopdracht · Stap %d/5 · Kwaliteit %d/100 · Volgende: %s" % [
 		stage + 1,
 		int(player_data.get("cooking_lesson_quality", 100)),
 		ACTION_LABELS[ACTIONS[stage]]
