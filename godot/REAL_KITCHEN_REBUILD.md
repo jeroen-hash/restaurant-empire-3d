@@ -1,3 +1,5 @@
+The next prototype pass adds a separate dry-stock shelf with individual salt portions. A salt portion can be physically picked up and added to the pan once; the shaker is consumed and a visible seasoning proxy appears in the pan. This remains a basic interaction prototype, not a final spice model or realistic seasoning animation.
+
 # RESTAURANT EMPIRE 3D — Real Kitchen Rebuild
 
 This branch is a clean restart of the kitchen gameplay. It deliberately starts before the recent menu-driven kitchen interaction experiments.
