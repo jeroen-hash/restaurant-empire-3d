@@ -11,6 +11,7 @@ func _run_tests() -> void:
 	var data := {"career_title": "Culinaire student", "career_level": 1}
 	var education = EducationScript.new(data)
 	var lesson = CookingLessonScript.new(data)
+	_assert(lesson.get_summary().contains("Stap 1/4"), "Lesson summary shows the first step")
 
 	var wrong: Dictionary = lesson.perform_action("cook", education)
 	_assert(not wrong["ok"], "Cooking out of sequence is rejected")
@@ -19,6 +20,7 @@ func _run_tests() -> void:
 
 	var prepare: Dictionary = lesson.perform_action("prepare", education)
 	_assert(prepare["ok"] and not prepare["complete"], "Preparation is the first practical step")
+	_assert(lesson.get_summary().contains("Stap 2/4"), "Lesson summary advances after preparation")
 	var cook: Dictionary = lesson.perform_action("cook", education)
 	_assert(cook["ok"], "Cooking follows preparation")
 	var season: Dictionary = lesson.perform_action("season", education)
