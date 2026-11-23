@@ -29,7 +29,7 @@ func _ready() -> void:
 
 	player = PlayerControllerScript.new()
 	add_child(player)
-	var saved_position: Dictionary = GameState.player_data.get("position", {"x": 0.0, "y": 0.0, "z": 5.0})
+	var saved_position: Dictionary = GameState.player_data.get("position", {"x": -22.0, "y": 0.0, "z": -5.3})
 	player.set_spawn_position(Vector3(
 		float(saved_position.get("x", 0.0)),
 		float(saved_position.get("y", 0.0)),
