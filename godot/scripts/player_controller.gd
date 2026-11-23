@@ -9,6 +9,7 @@ class_name PlayerController
 @export var touch_sensitivity := 0.006
 @export var camera_distance := 5.2
 var first_person := false
+var character_type := "man"
 
 var camera_yaw := 0.0
 var camera_pitch := -0.12
@@ -52,6 +53,14 @@ func _ready() -> void:
 	camera_pivot.add_child(camera)
 	camera.current = true
 	_build_touch_controls()
+
+func set_character_type(value: String) -> void:
+	character_type = "woman" if value.to_lower() == "woman" else "man"
+	if is_inside_tree():
+		if is_instance_valid(character):
+			character.queue_free()
+		_animation_player = null
+		_build_humanoid()
 
 func toggle_camera_mode() -> bool:
 	first_person = not first_person
@@ -117,10 +126,12 @@ func _build_humanoid() -> void:
 
 	# Prefer a real textured, rigged GLB character. Keep the procedural figure
 	# only as a safe fallback if the asset is unavailable.
-	var character_scene := load("res://assets/characters/casual-man.glb") as PackedScene
+	var model_path := "res://assets/characters/casual-woman.glb" if character_type == "woman" else "res://assets/characters/casual-man.glb"
+	var character_scene := load(model_path) as PackedScene
 	if character_scene != null:
 		var imported_model := character_scene.instantiate()
 		imported_model.name = "RiggedHuman"
+		imported_model.rotation.y = PI
 		character.add_child(imported_model)
 		character.scale = Vector3.ONE
 		_animation_player = _find_animation_player(imported_model)
