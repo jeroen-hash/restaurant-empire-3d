@@ -8,7 +8,7 @@ func _initialize() -> void:
 
 func _run_tests() -> void:
 	var state = GameStateScript.new()
-	_assert(state.player_data["position"]["x"] == -22.0, "New career starts at culinary school")
+	_assert(state.player_data["position"]["x"] == -25.0, "New career starts at culinary school")
 	_assert(int(state.player_data["education_year"]) == 1, "New career starts in school year one")
 
 	var old_save := {
