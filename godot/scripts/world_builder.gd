@@ -160,10 +160,7 @@ func _build_culinary_school() -> void:
 	else:
 		push_warning("De 3D-praktijkkeuken kon niet worden geladen.")
 
-	# Training work area, hand-wash point and warm practical lighting.
-	_box(school, "StudentWorkBench", Vector3(0, 0.92, 3.0), Vector3(3.0, 0.12, 0.85), Color(0.62, 0.65, 0.64), false, 0.28)
-	for x in [-1.25, 1.25]:
-		_box(school, "StudentBenchLeg", Vector3(x, 0.44, 3.0), Vector3(0.08, 0.88, 0.08), Color(0.20, 0.22, 0.22), false, 0.32)
+	# Practical work surfaces are part of the imported professional kitchen set.
 	var school_light := OmniLight3D.new()
 	school_light.position = Vector3(0, 3.1, 0.8)
 	school_light.light_color = Color(1.0, 0.91, 0.78)
