@@ -66,6 +66,9 @@ jobs:
       - name: Run culinary school progression tests
         run: godot --headless --path godot --script res://tests/test_education.gd
 
+      - name: Run first- and third-person camera tests
+        run: godot --headless --path godot --script res://tests/test_camera.gd
+
       - name: Launch main scene headlessly
         run: godot --headless --path godot --quit-after 10
 
