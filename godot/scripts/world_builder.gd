@@ -382,8 +382,9 @@ func set_game_time(minutes: int) -> void:
 
 func show_cooking_action(action: String) -> void:
 	var school := get_node_or_null("ANIMO_CULINARY_SCHOOL")
-	if action == "prepare" and school != null:
-		# Start each practical lesson with clean worktops.
+	if school == null:
+		return
+	if action == "prepare":
 		for old_station_name in ["ANIMO_Workstation_SNIJDEN", "ANIMO_Workstation_GAREN", "ANIMO_Workstation_KRUIDEN", "ANIMO_Workstation_DRESSEREN"]:
 			var old_station := school.get_node_or_null(old_station_name)
 			if old_station != null:
@@ -391,10 +392,9 @@ func show_cooking_action(action: String) -> void:
 					if child.name.begins_with("ActionVisual_"):
 						old_station.remove_child(child)
 						child.queue_free()
-	if school == null:
-		return
 	var station_names := {
 		"prepare": "ANIMO_Workstation_SNIJDEN",
+		"load_pan": "ANIMO_Workstation_GAREN",
 		"cook": "ANIMO_Workstation_GAREN",
 		"season": "ANIMO_Workstation_KRUIDEN",
 		"plate": "ANIMO_Workstation_DRESSEREN"
@@ -409,9 +409,19 @@ func show_cooking_action(action: String) -> void:
 	visual.name = visual_name
 	station.add_child(visual)
 	if action == "prepare":
-		for i in range(7):
-			var piece := _sphere(visual, "ChoppedVegetable_%02d" % i, Vector3(-0.24 + float(i % 4) * 0.15, 1.12, -0.12 + float(i / 4) * 0.16), 0.055, Color(0.72, 0.28, 0.12) if i % 2 == 0 else Color(0.43, 0.62, 0.20))
-			piece.scale = Vector3(1.0, 0.55, 0.8)
+		# Cut vegetables as small, recognisable food pieces on the board.
+		for i in range(5):
+			var carrot := _cylinder(visual, "CarrotSlice_%02d" % i, Vector3(-0.25 + float(i) * 0.12, 1.12, -0.10), 0.045, 0.11, Color(0.86, 0.31, 0.08), 12)
+			carrot.rotation.z = PI * 0.5
+			_box(visual, "OnionDice_%02d" % i, Vector3(-0.22 + float(i) * 0.11, 1.12, 0.12), Vector3(0.075, 0.055, 0.07), Color(0.88, 0.82, 0.67), false)
+	elif action == "load_pan":
+		# Visible food enters the pan only after the player presses the contextual load action.
+		for i in range(3):
+			var chicken := _box(visual, "ChickenPiece_%02d" % i, Vector3(-0.12 + float(i) * 0.12, 1.18, -0.06 + float(i % 2) * 0.12), Vector3(0.14, 0.065, 0.10), Color(0.79, 0.60, 0.40), false)
+			chicken.rotation.y = float(i) * 0.55
+		for i in range(3):
+			var carrot_piece := _cylinder(visual, "CarrotPiece_%02d" % i, Vector3(-0.12 + float(i) * 0.12, 1.20, 0.12), 0.035, 0.10, Color(0.88, 0.31, 0.07), 12)
+			carrot_piece.rotation.z = PI * 0.5
 	elif action == "cook":
 		var heat := OmniLight3D.new()
 		heat.name = "VisibleCookingHeat"
@@ -425,20 +435,30 @@ func show_cooking_action(action: String) -> void:
 		heat_pulse.tween_property(heat, "light_energy", 1.75, 0.32)
 		heat_pulse.tween_property(heat, "light_energy", 0.62, 0.32)
 		for i in range(3):
-			var steam := _sphere(visual, "CookingSteam_%02d" % i, Vector3(-0.18 + float(i) * 0.18, 1.38, 0), 0.075, Color(0.86, 0.89, 0.88))
+			var steam := _box(visual, "CookingSteam_%02d" % i, Vector3(-0.18 + float(i) * 0.18, 1.38, 0), Vector3(0.035, 0.22, 0.035), Color(0.86, 0.89, 0.88), false)
 			steam.transparency = 0.48
-			steam.scale = Vector3(0.65, 1.8, 0.65)
-			var steam_tween := visual.create_tween()
-			steam_tween.set_loops()
-			steam_tween.tween_property(steam, "position:y", 1.92 + float(i) * 0.08, 0.9).set_delay(float(i) * 0.22)
-			steam_tween.parallel().tween_property(steam, "transparency", 0.92, 0.9).set_delay(float(i) * 0.22)
-			steam_tween.tween_property(steam, "position:y", 1.38, 0.01)
-			steam_tween.parallel().tween_property(steam, "transparency", 0.48, 0.01)
 	elif action == "season":
-		for i in range(12):
-			var spice := _sphere(visual, "Seasoning_%02d" % i, Vector3(-0.42 + float(i % 4) * 0.27, 1.19 + float(i % 3) * 0.035, -0.12 + float(i / 4) * 0.13), 0.025, Color(0.76, 0.56, 0.20) if i % 2 == 0 else Color(0.34, 0.43, 0.20))
-			spice.scale = Vector3(1.0, 0.45, 1.0)
+		for i in range(4):
+			var spice := _box(visual, "Seasoning_%02d" % i, Vector3(-0.18 + float(i) * 0.12, 1.20, -0.08 + float(i % 2) * 0.12), Vector3(0.055, 0.025, 0.055), Color(0.76, 0.56, 0.20) if i % 2 == 0 else Color(0.34, 0.43, 0.20), false)
 	elif action == "plate":
-		for i in range(5):
-			var food := _sphere(visual, "PlatedFood_%02d" % i, Vector3(-0.13 + float(i % 3) * 0.13, 1.16, -0.10 + float(i / 3) * 0.14), 0.085, Color(0.62, 0.25, 0.10) if i % 2 == 0 else Color(0.42, 0.58, 0.20))
-			food.scale = Vector3(1.25, 0.48, 0.85)
+		# A composed dish made from shaped food meshes, not coloured decorative balls.
+		var steak := MeshInstance3D.new()
+		steak.name = "SearedChickenFillet"
+		var steak_mesh := CapsuleMesh.new()
+		steak_mesh.radius = 0.115
+		steak_mesh.height = 0.34
+		steak.mesh = steak_mesh
+		steak.position = Vector3(-0.09, 1.19, -0.04)
+		steak.rotation_degrees = Vector3(0, 0, 90)
+		steak.scale = Vector3(1.0, 0.72, 0.52)
+		steak.material_override = _material(Color(0.48, 0.24, 0.12), 0.48)
+		visual.add_child(steak)
+		for i in range(3):
+			var potato := _box(visual, "RoastedPotatoWedge_%02d" % i, Vector3(0.12 + float(i) * 0.045, 1.18, -0.16 + float(i) * 0.13), Vector3(0.15, 0.07, 0.075), Color(0.78, 0.62, 0.32), false)
+			potato.rotation.y = -0.25 + float(i) * 0.25
+		for i in range(3):
+			var carrot := _cylinder(visual, "GlazedCarrot_%02d" % i, Vector3(-0.16 + float(i) * 0.11, 1.18, 0.18), 0.035, 0.13, Color(0.88, 0.32, 0.07), 12)
+			carrot.rotation.z = PI * 0.5
+		for i in range(2):
+			var broccoli_stem := _cylinder(visual, "BroccoliStem_%02d" % i, Vector3(0.18, 1.20, 0.08 + float(i) * 0.10), 0.035, 0.11, Color(0.25, 0.42, 0.16), 10)
+			broccoli_stem.rotation.z = PI * 0.5
