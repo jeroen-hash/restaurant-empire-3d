@@ -19,3 +19,10 @@ Source: https://3dassets.dev/assets/restaurant-kitchen-and-dining-kitchen-li-dc3
 Direct GLB: https://cdn.3dassets.dev/assets/16541/v1/model.glb
 License: CC0 1.0 Universal (public domain dedication; commercial use allowed; attribution not required).
 Pack: https://3dassets.dev/packs/restaurant-kitchen-and-dining
+
+
+Innerscene — Casual dining restaurant interior, 60 covers
+File: casual-dining-restaurant-interior-60-covers.glb
+Source: https://www.innerscene.com/tools/library/3d-parts/casual-dining-restaurant-interior-60-covers-a1baf64a
+Direct GLB: https://files.innerscene.com/library/casual-dining-restaurant-interior-60-covers-a1baf64a/c93ee621542c51b8f223/casual-dining-restaurant-interior-60-covers.glb
+License: CC0 1.0 Universal (public domain dedication; commercial use allowed; attribution not required).
