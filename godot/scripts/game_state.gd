@@ -60,15 +60,16 @@ func load_game() -> bool:
 	restaurant_data = parsed.get("restaurant", restaurant_data)
 
 	# Migrate earlier prototype saves into the agreed culinary-school start.
-	if saved_version == 1 and not player_data.has("education_year"):
-		player_data["career_title"] = "Culinaire student"
-		player_data["career_level"] = 1
-		player_data["education_year"] = 1
-		player_data["education_level"] = 1
-		player_data["education_xp"] = 0
-		player_data["theory_skill"] = 0
-		player_data["practical_skill"] = 0
-		player_data["education_status"] = "Ingeschreven"
+	if saved_version == 1:
+		if not player_data.has("education_year"):
+			player_data["career_title"] = "Culinaire student"
+			player_data["career_level"] = 1
+			player_data["education_year"] = 1
+			player_data["education_level"] = 1
+			player_data["education_xp"] = 0
+			player_data["theory_skill"] = 0
+			player_data["practical_skill"] = 0
+			player_data["education_status"] = "Ingeschreven"
 		player_data["position"] = {"x": -22.0, "y": 0.0, "z": -5.3}
 		save_game()
 	return true
