@@ -115,7 +115,7 @@ jobs:
           cp -a /tmp/godot-web-export godot-web
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add godot-web
+          git add godot-web godot/assets/characters/*.glb godot/assets/environment/*.glb
           if git diff --cached --quiet; then
             echo "No web export changes to publish."
           else
