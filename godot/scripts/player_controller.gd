@@ -9,6 +9,7 @@ class_name PlayerController
 @export var touch_sensitivity := 0.006
 @export var camera_distance := 2.0
 var first_person := false
+var is_working := false
 var character_type := "man"
 
 var camera_yaw := 0.0
@@ -68,6 +69,14 @@ func set_character_type(value: String) -> void:
 		_build_humanoid()
 		if first_person:
 			character.visible = false
+
+func set_working(value: bool) -> void:
+	is_working = value
+	if value:
+		touch_move = Vector2.ZERO
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_character_animation("idle")
 
 func toggle_camera_mode() -> bool:
 	first_person = not first_person
@@ -253,7 +262,9 @@ func _physics_process(delta: float) -> void:
 	var input_vector := Vector2.ZERO
 	input_vector.x = Input.get_axis("move_left", "move_right")
 	input_vector.y = Input.get_axis("move_forward", "move_back")
-	if touch_move.length() > 0.12:
+	if is_working:
+		input_vector = Vector2.ZERO
+	if touch_move.length() > 0.12 and not is_working:
 		input_vector = touch_move
 	input_vector = input_vector.limit_length(1.0)
 	if is_instance_valid(joystick_knob):
@@ -266,8 +277,12 @@ func _physics_process(delta: float) -> void:
 	direction = direction.normalized()
 
 	var target_velocity := direction * move_speed
-	velocity.x = move_toward(velocity.x, target_velocity.x, acceleration * delta)
-	velocity.z = move_toward(velocity.z, target_velocity.z, acceleration * delta)
+	if is_working:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	else:
+		velocity.x = move_toward(velocity.x, target_velocity.x, acceleration * delta)
+		velocity.z = move_toward(velocity.z, target_velocity.z, acceleration * delta)
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	else:
@@ -297,6 +312,15 @@ func _physics_process(delta: float) -> void:
 func _animate_character(delta: float, speed: float) -> void:
 	if _animation_player != null:
 		return
+	if is_working:
+		walk_clock += delta * 8.0
+		left_arm.rotation.x = -0.48 + sin(walk_clock * 2.0) * 0.16
+		right_arm.rotation.x = -0.68 + sin(walk_clock * 2.0 + PI) * 0.22
+		left_arm.rotation.z = -0.08
+		right_arm.rotation.z = 0.08
+		return
+	left_arm.rotation.z = 0.0
+	right_arm.rotation.z = 0.0
 	var moving := speed > 0.18
 	if moving:
 		walk_clock += delta * (7.4 if speed < 3.0 else 10.0)

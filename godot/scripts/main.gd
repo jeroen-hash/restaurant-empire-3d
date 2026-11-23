@@ -293,7 +293,7 @@ func _start_cooking_challenge() -> void:
 	cooking_challenge_active = true
 	cooking_challenge_elapsed = 0.0
 	if is_instance_valid(player):
-		player.set_physics_process(false)
+		player.set_working(true)
 	if is_instance_valid(cooking_challenge_meter):
 		cooking_challenge_meter.value = 0
 		cooking_challenge_meter.visible = true
@@ -309,7 +309,7 @@ func _finish_cooking_challenge() -> void:
 	var execution_quality := clampi(roundi(100.0 - distance_from_target * 190.0), 0, 100)
 	cooking_challenge_active = false
 	if is_instance_valid(player):
-		player.set_physics_process(true)
+		player.set_working(false)
 	if is_instance_valid(cooking_challenge_meter):
 		cooking_challenge_meter.visible = false
 	if is_instance_valid(cooking_challenge_hint):
