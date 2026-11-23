@@ -1,0 +1,26 @@
+RESTAURANT EMPIRE 3D - Unity basisbestanden
+
+INSTALLATIE
+1. Download de ZIP van de GitHub-repository.
+2. Pak de ZIP uit.
+3. Kopieer de map Assets/RestaurantEmpire3D naar de map Assets van je Unity-project.
+4. Open Unity en wacht tot de scripts gecompileerd zijn.
+5. Selecteer je Player-object.
+6. Voeg Character Controller toe als die nog ontbreekt.
+7. Voeg PlayerMovement toe.
+8. Selecteer Main Camera en voeg CameraFollow toe.
+9. Sleep Player naar het Target-veld van CameraFollow.
+
+BESTURING
+Pijltje omhoog: vooruit
+Pijltje omlaag: achteruit
+Pijltje links: links
+Pijltje rechts: rechts
+
+LET OP
+Dit zijn de eerste basisbestanden, geen volledige game. De scripts gebruiken Unity's oude Input API (Input.GetKey).
+Als Unity meldt dat de oude Input API niet actief is:
+Edit > Project Settings > Player > Other Settings > Active Input Handling > Both.
+Daarna Unity laten herstarten.
+
+De scripts moeten nog in de Unity-editor getest worden.
