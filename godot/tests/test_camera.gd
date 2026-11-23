@@ -13,8 +13,12 @@ func _run_tests() -> void:
 	_assert(player.camera != null and player.camera.current, "Third-person camera starts active")
 	player.set_character_type("woman")
 	_assert(player.character_type == "woman", "Player can choose the female character")
+	if ResourceLoader.exists("res://assets/characters/casual-woman.glb"):
+		_assert(player._animation_player != null, "Female GLB loads with its animations")
 	player.set_character_type("man")
 	_assert(player.character_type == "man", "Player can choose the male character")
+	if ResourceLoader.exists("res://assets/characters/casual-man.glb"):
+		_assert(player._animation_player != null, "Male GLB loads with its animations")
 	_assert(not player.first_person and player.character.visible, "Character is visible in third-person mode")
 	var first_person: bool = player.toggle_camera_mode()
 	_assert(first_person, "Camera switches to first-person mode")
