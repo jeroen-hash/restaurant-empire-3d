@@ -58,6 +58,8 @@ jobs:
           curl -fL --retry 3 https://files.innerscene.com/library/restaurant-2-top-table-set-49d30711/f6f195708795d83bf51a/restaurant-2-top-table-set.glb -o godot/assets/environment/restaurant-2-top-table-set.glb
           test -s godot/assets/environment/restaurant-service-station.glb
           test -s godot/assets/environment/restaurant-2-top-table-set.glb
+          curl -fL --retry 3 https://files.innerscene.com/library/casual-dining-restaurant-interior-60-covers-a1baf64a/c93ee621542c51b8f223/casual-dining-restaurant-interior-60-covers.glb -o godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
+          test -s godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
           curl -fL --retry 3 https://cdn.3dassets.dev/assets/16541/v1/model.glb -o godot/assets/environment/working-kitchen-line.glb
           test -s godot/assets/environment/working-kitchen-line.glb
           npx --yes @gltf-transform/cli dequantize godot/assets/environment/working-kitchen-line.glb /tmp/working-kitchen-line.glb
