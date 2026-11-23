@@ -49,6 +49,8 @@ func _ready() -> void:
 	_refresh_education_ui()
 
 func _process(delta: float) -> void:
+	if Input.is_action_just_pressed("interact"):
+		_on_interact_with_kitchen()
 	if player != null:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
@@ -95,6 +97,7 @@ func _setup_input() -> void:
 	_add_key_action("move_back", [KEY_S, KEY_DOWN])
 	_add_key_action("move_left", [KEY_A, KEY_LEFT])
 	_add_key_action("move_right", [KEY_D, KEY_RIGHT])
+	_add_key_action("interact", [KEY_E])
 
 func _add_key_action(action: String, keys: Array) -> void:
 	if not InputMap.has_action(action):
@@ -254,6 +257,8 @@ func _on_cooking_action(action: String) -> void:
 		message_label.text = "Ga naar de ANIMO Culinary School om in de praktijkkeuken te oefenen."
 		return
 	var result: Dictionary = cooking_lesson.perform_action(action, education)
+	if bool(result.get("ok", false)) and world != null:
+		world.show_cooking_action(action)
 	message_label.text = str(result.get("message", ""))
 	if result.get("complete", false) and int(result.get("level_ups", 0)) > 0:
 		message_label.text += " Niveau gestegen naar %d." % int(result["level"])
