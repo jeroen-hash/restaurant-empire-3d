@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: godot-web-export-v4-${{ github.ref }}
+  group: godot-web-export-v5-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -64,6 +64,12 @@ jobs:
           test -s godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
           npx --yes @gltf-transform/cli dequantize godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb /tmp/casual-dining-restaurant-interior-60-covers.glb
           mv /tmp/casual-dining-restaurant-interior-60-covers.glb godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
+          npx --yes @gltf-transform/cli resize godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb /tmp/casual-dining-restaurant-interior-60-covers-resized.glb --width 1024 --height 1024
+          mv /tmp/casual-dining-restaurant-interior-60-covers-resized.glb godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
+          npx --yes @gltf-transform/cli resize godot/assets/environment/restaurant-2-top-table-set.glb /tmp/restaurant-2-top-table-set-resized.glb --width 1024 --height 1024
+          mv /tmp/restaurant-2-top-table-set-resized.glb godot/assets/environment/restaurant-2-top-table-set.glb
+          npx --yes @gltf-transform/cli resize godot/assets/environment/restaurant-service-station.glb /tmp/restaurant-service-station-resized.glb --width 1024 --height 1024
+          mv /tmp/restaurant-service-station-resized.glb godot/assets/environment/restaurant-service-station.glb
           curl -fL --retry 3 https://cdn.3dassets.dev/assets/16541/v1/model.glb -o godot/assets/environment/working-kitchen-line.glb
           test -s godot/assets/environment/working-kitchen-line.glb
           npx --yes @gltf-transform/cli dequantize godot/assets/environment/working-kitchen-line.glb /tmp/working-kitchen-line.glb
