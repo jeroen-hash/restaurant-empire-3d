@@ -1,4 +1,5 @@
 name: Publish real-kitchen test build
+# Rebuild the mobile-optimized Web export from rebuild/real-kitchen-v1.
 
 on:
   push:
