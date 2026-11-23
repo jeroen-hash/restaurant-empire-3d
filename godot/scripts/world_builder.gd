@@ -444,7 +444,7 @@ func show_cooking_action(action: String) -> void:
 		var plate_station := station
 		if not plate_station.has_node("ActionVisual_plate_main"):
 			var base := Node3D.new()
-			base.name = "ActionVisual_plate_main"
+			base.name = "ActionVisual_plate_base"
 			plate_station.add_child(base)
 			# White ceramic plate with a raised rim, clearly visible from the player camera.
 			var plate_center := _cylinder(base, "CeramicPlate", Vector3(0, 1.08, 0), 0.34, 0.045, Color(0.94, 0.93, 0.88), 48)
