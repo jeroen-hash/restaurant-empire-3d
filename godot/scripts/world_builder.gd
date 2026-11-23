@@ -397,7 +397,11 @@ func show_cooking_action(action: String) -> void:
 		"load_pan": "ANIMO_Workstation_GAREN",
 		"cook": "ANIMO_Workstation_GAREN",
 		"season": "ANIMO_Workstation_KRUIDEN",
-		"plate": "ANIMO_Workstation_DRESSEREN"
+		"plate": "ANIMO_Workstation_DRESSEREN",
+		"plate_main": "ANIMO_Workstation_DRESSEREN",
+		"plate_side": "ANIMO_Workstation_DRESSEREN",
+		"plate_veg": "ANIMO_Workstation_DRESSEREN",
+		"plate_finish": "ANIMO_Workstation_DRESSEREN"
 	}
 	var station := school.get_node_or_null(str(station_names.get(action, "")))
 	if station == null:
