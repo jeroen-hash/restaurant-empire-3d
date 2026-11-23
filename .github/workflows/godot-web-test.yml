@@ -47,6 +47,14 @@ jobs:
           curl -fL --retry 3 https://models.vinish.dev/people/casual-man.glb -o godot/assets/characters/casual-man.glb
           test -s godot/assets/characters/casual-man.glb
 
+      - name: Download CC0 restaurant environment assets
+        run: |
+          mkdir -p godot/assets/environment
+          curl -fL --retry 3 https://files.innerscene.com/library/restaurant-service-station-c9b08fa4/a452f798f24d80dda162/restaurant-service-station.glb -o godot/assets/environment/restaurant-service-station.glb
+          curl -fL --retry 3 https://files.innerscene.com/library/restaurant-2-top-table-set-49d30711/f6f195708795d83bf51a/restaurant-2-top-table-set.glb -o godot/assets/environment/restaurant-2-top-table-set.glb
+          test -s godot/assets/environment/restaurant-service-station.glb
+          test -s godot/assets/environment/restaurant-2-top-table-set.glb
+
       - name: Import and parse Godot project
         run: godot --headless --editor --path godot --quit
 
