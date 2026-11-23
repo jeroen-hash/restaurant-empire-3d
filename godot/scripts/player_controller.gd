@@ -7,17 +7,17 @@ class_name PlayerController
 @export var gravity := 18.0
 @export var mouse_sensitivity := 0.003
 @export var touch_sensitivity := 0.006
-@export var camera_distance := 3.25
+@export var camera_distance := 2.0
 var first_person := false
 var character_type := "man"
 
 var camera_yaw := 0.0
-var camera_pitch := -0.12
+var camera_pitch := -0.18
 var touch_move := Vector2.ZERO
 var active_move_touch := -1
 var active_look_touch := -1
 var move_touch_origin := Vector2.ZERO
-var spawn_safety_position := Vector3(-22.0, 0.0, -5.3)
+var spawn_safety_position := Vector3(-25.0, 0.0, -5.0)
 
 var camera_pivot: Node3D
 var camera: Camera3D
@@ -30,6 +30,8 @@ var left_knee: Node3D
 var right_knee: Node3D
 var walk_clock := 0.0
 var _animation_player: AnimationPlayer
+var joystick_base: Panel
+var joystick_knob: Panel
 
 func _ready() -> void:
 	name = "Player"
@@ -45,13 +47,13 @@ func _ready() -> void:
 
 	camera_pivot = Node3D.new()
 	camera_pivot.name = "CameraPivot"
-	camera_pivot.position = Vector3(0, 1.48, 0)
+	camera_pivot.position = Vector3(0, 1.35, 0)
 	add_child(camera_pivot)
 
 	camera = Camera3D.new()
 	camera.name = "ThirdPersonCamera"
-	camera.position = Vector3(0, 0.32, camera_distance)
-	camera.fov = 60.0
+	camera.position = Vector3(0, 0.10, camera_distance)
+	camera.fov = 52.0
 	camera_pivot.add_child(camera)
 	camera.current = true
 	_build_touch_controls()
@@ -69,7 +71,7 @@ func set_character_type(value: String) -> void:
 func toggle_camera_mode() -> bool:
 	first_person = not first_person
 	if first_person:
-		camera_pivot.position = Vector3(0, 1.62, 0)
+		camera_pivot.position = Vector3(0, 1.48, 0)
 		camera.position = Vector3(0, 0, 0.08)
 		character.visible = false
 	else:
@@ -245,6 +247,8 @@ func _physics_process(delta: float) -> void:
 	if touch_move.length() > 0.12:
 		input_vector = touch_move
 	input_vector = input_vector.limit_length(1.0)
+	if is_instance_valid(joystick_knob):
+		joystick_knob.position = Vector2(42, 42) + touch_move * 34.0
 
 	var forward := -camera_pivot.global_basis.z
 	var right := camera_pivot.global_basis.x
@@ -307,7 +311,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventScreenTouch:
 		if event.pressed:
-			if event.position.x < get_viewport().get_visible_rect().size.x * 0.48 and active_move_touch == -1:
+			if event.position.x < get_viewport().get_visible_rect().size.x * 0.50 and active_move_touch == -1:
 				active_move_touch = event.index
 				move_touch_origin = event.position
 			elif active_look_touch == -1:
@@ -321,7 +325,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventScreenDrag:
 		if event.index == active_move_touch:
 			var size := get_viewport().get_visible_rect().size
-			touch_move = ((event.position - move_touch_origin) / Vector2(72.0, 72.0)).limit_length(1.0)
+			touch_move = ((event.position - move_touch_origin) / Vector2(92.0, 92.0)).limit_length(1.0)
 		elif event.index == active_look_touch:
 			camera_yaw -= event.relative.x * touch_sensitivity
 			camera_pitch = clampf(camera_pitch - event.relative.y * touch_sensitivity, -0.72, 0.18)
@@ -338,8 +342,10 @@ func _build_touch_controls() -> void:
 	layer.layer = 5
 	add_child(layer)
 
-	var base := Panel.new()
+	joystick_base = Panel.new()
+	var base := joystick_base
 	base.name = "MoveJoystickBase"
+	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var viewport_size := get_viewport().get_visible_rect().size
 	base.position = Vector2(viewport_size.x * 0.23 - 66.0, viewport_size.y * 0.78 - 66.0)
 	base.size = Vector2(132, 132)
@@ -351,8 +357,10 @@ func _build_touch_controls() -> void:
 	base.add_theme_stylebox_override("panel", base_style)
 	layer.add_child(base)
 
-	var knob := Panel.new()
+	joystick_knob = Panel.new()
+	var knob := joystick_knob
 	knob.name = "MoveJoystickKnob"
+	knob.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	knob.position = Vector2(42, 42)
 	knob.size = Vector2(48, 48)
 	var knob_style := StyleBoxFlat.new()
@@ -364,6 +372,7 @@ func _build_touch_controls() -> void:
 	base.add_child(knob)
 
 	var move_label := Label.new()
+	move_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	move_label.text = "BEWEGEN"
 	move_label.position = base.position + Vector2(36, 134)
 	move_label.add_theme_font_size_override("font_size", 13)
@@ -371,6 +380,7 @@ func _build_touch_controls() -> void:
 	layer.add_child(move_label)
 
 	var look_label := Label.new()
+	look_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	look_label.text = "SLEEP RECHTS OM CAMERA TE DRAAIEN"
 	look_label.anchor_left = 1.0
 	look_label.anchor_right = 1.0
