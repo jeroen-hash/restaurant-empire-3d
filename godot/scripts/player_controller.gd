@@ -118,7 +118,6 @@ func _build_humanoid() -> void:
 	# Offline fallback for editor/test environments without the downloaded GLB.
 	
 	character.name = "ANIMO_Humanoid"
-	add_child(character)
 
 	var skin := _mat(Color(0.69, 0.46, 0.33))
 	var shirt := _mat(Color(0.12, 0.24, 0.20))
