@@ -78,8 +78,8 @@ func _process(delta: float) -> void:
 		var contextual_button: Button = station_buttons.get("context")
 		if is_instance_valid(contextual_button):
 			if physical_kitchen != null and _is_at_culinary_school():
-				contextual_button.visible = true
-				contextual_button.disabled = false
+				contextual_button.visible = physical_kitchen.has_interactable_target()
+				contextual_button.disabled = not contextual_button.visible
 				contextual_button.text = "PAK / PLAATS / GEBRUIK"
 			elif cooking_challenge_active:
 				contextual_button.visible = true
