@@ -23,6 +23,10 @@ var pause_button: Button
 var camera_button: Button
 var credits_dialog: AcceptDialog
 var game_paused := false
+var cooking_challenge_active := false
+var cooking_challenge_elapsed := 0.0
+var cooking_challenge_meter: ProgressBar
+var cooking_challenge_hint: Label
 
 func _ready() -> void:
 	_setup_input()
@@ -51,6 +55,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("interact"):
 		_on_interact_with_kitchen()
+	if cooking_challenge_active:
+		cooking_challenge_elapsed += delta
+		var phase := fposmod(cooking_challenge_elapsed * 0.9, 1.0)
+		if is_instance_valid(cooking_challenge_meter):
+			cooking_challenge_meter.value = phase * 100.0
 	if player != null:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
@@ -176,6 +185,18 @@ func _build_hud() -> void:
 	interact_button.text = "LOOP NAAR DE VOLGENDE WERKPOST"
 	interact_button.pressed.connect(_on_interact_with_kitchen)
 	column.add_child(interact_button)
+	cooking_challenge_hint = Label.new()
+	cooking_challenge_hint.text = "TIMINGOEFENING · STOP BIJ 60–76%"
+	cooking_challenge_hint.visible = false
+	column.add_child(cooking_challenge_hint)
+	cooking_challenge_meter = ProgressBar.new()
+	cooking_challenge_meter.min_value = 0
+	cooking_challenge_meter.max_value = 100
+	cooking_challenge_meter.value = 0
+	cooking_challenge_meter.show_percentage = false
+	cooking_challenge_meter.custom_minimum_size = Vector2(220, 16)
+	cooking_challenge_meter.visible = false
+	column.add_child(cooking_challenge_meter)
 
 	camera_button = Button.new()
 	camera_button.text = "EERSTE PERSOON"
@@ -242,6 +263,9 @@ func _get_nearest_cooking_station(position: Vector3) -> Dictionary:
 func _on_interact_with_kitchen() -> void:
 	if player == null:
 		return
+	if cooking_challenge_active:
+		_finish_cooking_challenge()
+		return
 	var station := _get_nearest_cooking_station(player.global_position)
 	if station.is_empty() or float(station["distance"]) > 2.6:
 		message_label.text = "Ga dichter bij een werkpost staan om ermee te werken."
@@ -250,13 +274,38 @@ func _on_interact_with_kitchen() -> void:
 	if str(station["action"]) != next_action:
 		message_label.text = "Dit is de verkeerde werkpost. Volgende stap: %s." % cooking_lesson.get_next_action_label()
 		return
-	_on_cooking_action(next_action)
+	_start_cooking_challenge()
 
-func _on_cooking_action(action: String) -> void:
+func _start_cooking_challenge() -> void:
+	cooking_challenge_active = true
+	cooking_challenge_elapsed = 0.0
+	if is_instance_valid(cooking_challenge_meter):
+		cooking_challenge_meter.value = 0
+		cooking_challenge_meter.visible = true
+	if is_instance_valid(cooking_challenge_hint):
+		cooking_challenge_hint.visible = true
+	if is_instance_valid(interact_button):
+		interact_button.text = "STOP OP HET JUISTE MOMENT"
+	message_label.text = "De handeling loopt. Stop de meter in de gouden zone (60–76%) voor een betere beoordeling."
+
+func _finish_cooking_challenge() -> void:
+	var phase := fposmod(cooking_challenge_elapsed * 0.9, 1.0)
+	var distance_from_target := absf(phase - 0.68)
+	var execution_quality := clampi(roundi(100.0 - distance_from_target * 190.0), 0, 100)
+	cooking_challenge_active = false
+	if is_instance_valid(cooking_challenge_meter):
+		cooking_challenge_meter.visible = false
+	if is_instance_valid(cooking_challenge_hint):
+		cooking_challenge_hint.visible = false
+	if is_instance_valid(interact_button):
+		interact_button.text = "WERKPOST · VOLGENDE HANDELING"
+	_on_cooking_action(str(cooking_lesson.get_next_action()), execution_quality)
+
+func _on_cooking_action(action: String, execution_quality := 100) -> void:
 	if not _is_at_culinary_school():
 		message_label.text = "Ga naar de ANIMO Culinary School om in de praktijkkeuken te oefenen."
 		return
-	var result: Dictionary = cooking_lesson.perform_action(action, education)
+	var result: Dictionary = cooking_lesson.perform_action(action, education, execution_quality)
 	if bool(result.get("ok", false)) and world != null:
 		world.show_cooking_action(action)
 	message_label.text = str(result.get("message", ""))
