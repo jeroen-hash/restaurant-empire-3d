@@ -25,6 +25,7 @@ var right_leg: Node3D
 var left_knee: Node3D
 var right_knee: Node3D
 var walk_clock := 0.0
+var _animation_player: AnimationPlayer
 
 func _ready() -> void:
 	name = "Player"
@@ -98,6 +99,24 @@ func _box(parent: Node3D, label: String, size: Vector3, material: Material, pos:
 
 func _build_humanoid() -> void:
 	character = Node3D.new()
+	character.name = "ANIMO_PlayerCharacter"
+	add_child(character)
+
+	# Prefer a real textured, rigged GLB character. Keep the procedural figure
+	# only as a safe fallback if the asset is unavailable.
+	var character_scene := load("res://assets/characters/casual-man.glb") as PackedScene
+	if character_scene != null:
+		var imported_model := character_scene.instantiate()
+		imported_model.name = "RiggedHuman"
+		character.add_child(imported_model)
+		character.scale = Vector3.ONE
+		_animation_player = _find_animation_player(imported_model)
+		if _animation_player != null:
+			_play_character_animation("idle")
+		return
+
+	# Offline fallback for editor/test environments without the downloaded GLB.
+	
 	character.name = "ANIMO_Humanoid"
 	add_child(character)
 
@@ -172,6 +191,24 @@ func _build_humanoid() -> void:
 	_capsule(right_knee, "Shin_R", 0.082, 0.48, trousers, Vector3(0, -0.21, 0))
 	_box(right_knee, "Shoe_R", Vector3(0.17, 0.105, 0.29), shoe, Vector3(0, -0.435, -0.055))
 
+func _find_animation_player(root: Node) -> AnimationPlayer:
+	if root is AnimationPlayer:
+		return root as AnimationPlayer
+	for child in root.get_children():
+		var found := _find_animation_player(child)
+		if found != null:
+			return found
+	return null
+
+func _play_character_animation(wanted: String) -> void:
+	if _animation_player == null:
+		return
+	for animation_name in _animation_player.get_animation_list():
+		if animation_name.to_lower().contains(wanted):
+			if _animation_player.current_animation != animation_name:
+				_animation_player.play(animation_name)
+			return
+
 func _physics_process(delta: float) -> void:
 	var input_vector := Vector2.ZERO
 	input_vector.x = Input.get_axis("move_left", "move_right")
@@ -199,11 +236,15 @@ func _physics_process(delta: float) -> void:
 		var target_yaw := atan2(-direction.x, -direction.z)
 		character.rotation.y = lerp_angle(character.rotation.y, target_yaw, minf(delta * 11.0, 1.0))
 	_animate_character(delta, Vector2(velocity.x, velocity.z).length())
+	if _animation_player != null:
+		_play_character_animation("walk" if Vector2(velocity.x, velocity.z).length() > 0.18 else "idle")
 
 	camera_pivot.rotation.y = camera_yaw
 	camera_pivot.rotation.x = camera_pitch
 
 func _animate_character(delta: float, speed: float) -> void:
+	if _animation_player != null:
+		return
 	var moving := speed > 0.18
 	if moving:
 		walk_clock += delta * (7.4 if speed < 3.0 else 10.0)
