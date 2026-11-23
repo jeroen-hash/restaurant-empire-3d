@@ -7,6 +7,7 @@ const SAVE_VERSION := 2
 var player_data: Dictionary = {
 	"career_level": 1,
 	"career_title": "Culinaire student",
+	"avatar_type": "man",
 	"education_year": 1,
 	"education_level": 1,
 	"education_xp": 0,
@@ -58,6 +59,8 @@ func load_game() -> bool:
 		return false
 	player_data = parsed.get("player", player_data)
 	restaurant_data = parsed.get("restaurant", restaurant_data)
+	if not player_data.has("avatar_type"):
+		player_data["avatar_type"] = "man"
 
 	# Migrate earlier prototype saves into the agreed culinary-school start.
 	if saved_version == 1:
