@@ -4,10 +4,12 @@ const WorldBuilderScript = preload("res://scripts/world_builder.gd")
 const PlayerControllerScript = preload("res://scripts/player_controller.gd")
 const EconomyScript = preload("res://scripts/restaurant_economy.gd")
 const EducationScript = preload("res://scripts/education_progression.gd")
+const CookingLessonScript = preload("res://scripts/cooking_lesson.gd")
 
 var player: PlayerController
 var economy
 var education
+var cooking_lesson
 var status_label: Label
 var education_label: Label
 var message_label: Label
@@ -24,6 +26,7 @@ func _ready() -> void:
 	GameState.load_game()
 	economy = EconomyScript.new(GameState.player_data, GameState.restaurant_data)
 	education = EducationScript.new(GameState.player_data)
+	cooking_lesson = CookingLessonScript.new(GameState.player_data)
 	world = WorldBuilderScript.new()
 	world.name = "World"
 	add_child(world)
@@ -123,10 +126,16 @@ func _build_hud() -> void:
 	theory_button.text = "THEORIELES"
 	theory_button.pressed.connect(_on_study_theory)
 	study_row.add_child(theory_button)
-	var practice_button := Button.new()
-	practice_button.text = "PRAKTIJKLES"
-	practice_button.pressed.connect(_on_study_practice)
-	study_row.add_child(practice_button)
+	var cooking_title := Label.new()
+	cooking_title.text = "PRAKTIJKOPDRACHT · VOLG DE JUISTE VOLGORDE"
+	column.add_child(cooking_title)
+	var cooking_grid := GridContainer.new()
+	cooking_grid.columns = 2
+	column.add_child(cooking_grid)
+	_add_cooking_button(cooking_grid, "SNIJDEN", "prepare")
+	_add_cooking_button(cooking_grid, "GAREN", "cook")
+	_add_cooking_button(cooking_grid, "KRUIDEN", "season")
+	_add_cooking_button(cooking_grid, "DRESSEREN", "plate")
 
 	var exam_button := Button.new()
 	exam_button.text = "EXAMEN AFLEGGEN"
@@ -154,8 +163,23 @@ func _build_hud() -> void:
 func _on_study_theory() -> void:
 	_apply_study("theory")
 
-func _on_study_practice() -> void:
-	_apply_study("practice")
+func _add_cooking_button(parent: GridContainer, label_text: String, action: String) -> void:
+	var action_button := Button.new()
+	action_button.text = label_text
+	action_button.pressed.connect(_on_cooking_action.bind(action))
+	parent.add_child(action_button)
+
+func _on_cooking_action(action: String) -> void:
+	if not _is_at_culinary_school():
+		message_label.text = "Ga naar de ANIMO Culinary School om in de praktijkkeuken te oefenen."
+		return
+	var result: Dictionary = cooking_lesson.perform_action(action, education)
+	message_label.text = str(result.get("message", ""))
+	if result.get("complete", false):
+		if int(result.get("level_ups", 0)) > 0:
+			message_label.text += " Niveau gestegen naar %d." % int(result["level"])
+		_refresh_education_ui()
+	_save_now()
 
 func _apply_study(study_type: String) -> void:
 	if not _is_at_culinary_school():
