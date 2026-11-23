@@ -77,3 +77,7 @@ func get_summary() -> String:
 func get_next_action_label() -> String:
 	var stage := clampi(int(player_data.get("cooking_lesson_stage", 0)), 0, ACTIONS.size() - 1)
 	return ACTION_LABELS[ACTIONS[stage]]
+
+func get_next_action() -> String:
+	var stage := clampi(int(player_data.get("cooking_lesson_stage", 0)), 0, ACTIONS.size() - 1)
+	return ACTIONS[stage]
