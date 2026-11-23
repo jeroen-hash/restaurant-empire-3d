@@ -1,0 +1,34 @@
+name: Godot project validation
+
+on:
+  push:
+    branches:
+      - rebuild/visual-foundation
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-check.yml"
+  pull_request:
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-check.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.4.1
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip -O godot.zip
+          unzip -q godot.zip -d godot-bin
+          chmod +x godot-bin/Godot_v4.4.1-stable_linux.x86_64
+          sudo mv godot-bin/Godot_v4.4.1-stable_linux.x86_64 /usr/local/bin/godot
+
+      - name: Import and parse Godot project
+        run: godot --headless --editor --path godot --quit
+
+      - name: Launch main scene headlessly
+        run: godot --headless --path godot --quit-after 10
