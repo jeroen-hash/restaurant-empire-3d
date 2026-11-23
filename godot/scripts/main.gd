@@ -49,6 +49,8 @@ func _process(delta: float) -> void:
 	if player != null:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
+		if is_instance_valid(interact_button):
+			interact_button.visible = p.distance_to(Vector3(-22.0, 0.0, -9.0)) <= 5.5
 
 	# Automatisch bewaren, ook als de speler lang bezig is.
 	autosave_accumulator += delta
