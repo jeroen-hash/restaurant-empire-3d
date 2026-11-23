@@ -15,6 +15,7 @@ var held_item_id := ""
 var stock := {"chicken": 4, "carrot": 6, "potato": 6}
 var item_nodes: Dictionary = {}
 var board_area: Area3D
+var tool_rack_area: Area3D
 var board_placed := false
 var board_has_ingredient := false
 var board_ingredient_id := ""
@@ -64,6 +65,9 @@ func handle_interaction() -> bool:
 	if is_instance_valid(held_item):
 		if hit.has("collider") and hit.collider == board_area and held_item_id == "board" and not board_placed:
 			_place_board_on_counter()
+			return true
+		if hit.has("collider") and hit.collider == tool_rack_area and held_item_id == "knife":
+			_return_knife_to_rack()
 			return true
 		if hit.has("collider") and hit.collider == hob_area and held_item_id == "pan":
 			_place_pan_on_hob()
@@ -141,12 +145,31 @@ func _drop_held_item() -> void:
 	add_child(item)
 	item.global_transform = world_transform
 	if item is RigidBody3D:
+		(item as RigidBody3D).freeze = false
 		(item as RigidBody3D).collision_layer = 1
 		(item as RigidBody3D).collision_mask = 1
 	held_item = null
 	var dropped_id := held_item_id
 	held_item_id = ""
 	status_changed.emit("%s neergelegd." % _item_label(dropped_id))
+
+func _return_knife_to_rack() -> void:
+	if not is_instance_valid(held_item) or held_item_id != "knife" or not is_instance_valid(tool_rack_area):
+		return
+	var knife := held_item
+	hand_anchor.remove_child(knife)
+	tool_rack_area.add_child(knife)
+	knife.transform = Transform3D.IDENTITY
+	knife.position = Vector3(-0.18, 0.28, 0.0)
+	knife.rotation = Vector3.ZERO
+	if knife is RigidBody3D:
+		(knife as RigidBody3D).freeze = true
+		(knife as RigidBody3D).collision_layer = 1
+		(knife as RigidBody3D).collision_mask = 1
+	held_item = null
+	held_item_id = ""
+	knife_taken = false
+	status_changed.emit("Mes terug op het gereedschapsrek gelegd.")
 
 func _place_board_on_counter() -> void:
 	if not is_instance_valid(held_item) or held_item_id != "board" or board_placed:
@@ -313,12 +336,15 @@ func _build_blockout() -> void:
 	# These small meshes are deliberately marked as temporary interaction proxies.
 	var fridge := _make_station("Koeling · voorraad", Vector3(-4.2, 0.0, -1.4), Vector3(1.0, 2.0, 0.9), Color(0.58, 0.66, 0.68))
 	fridge.name = "TemporaryColdStorageProxy"
-	_add_item("chicken", Vector3(-4.15, 1.15, -1.35), Color(0.78, 0.54, 0.40), Vector3(0.22, 0.13, 0.14))
-	_add_item("carrot", Vector3(-3.75, 1.12, -1.35), Color(0.95, 0.36, 0.08), Vector3(0.08, 0.22, 0.08))
-	_add_item("potato", Vector3(-3.35, 1.12, -1.35), Color(0.63, 0.47, 0.28), Vector3(0.15, 0.13, 0.14))
+	for i in range(int(stock["chicken"])):
+		_add_item("chicken", _stock_item_position("chicken", i), _stock_item_color("chicken"), _stock_item_size("chicken"))
+	for i in range(int(stock["carrot"])):
+		_add_item("carrot", _stock_item_position("carrot", i), _stock_item_color("carrot"), _stock_item_size("carrot"))
+	for i in range(int(stock["potato"])):
+		_add_item("potato", _stock_item_position("potato", i), _stock_item_color("potato"), _stock_item_size("potato"))
 	_make_station("Werkblad", Vector3(-2.3, 0.88, 1.8), Vector3(2.2, 0.12, 1.0), Color(0.55, 0.58, 0.58))
 	board_area = _make_station("TemporaryBoardPlacementTarget", Vector3(-2.3, 1.02, 1.8), Vector3(0.75, 0.10, 0.48), Color(0.32, 0.34, 0.34))
-	_make_station("Gereedschapsrek", Vector3(-1.0, 1.45, 1.0), Vector3(0.8, 0.65, 0.12), Color(0.25, 0.27, 0.27))
+	tool_rack_area = _make_station("Gereedschapsrek", Vector3(-1.0, 1.45, 1.0), Vector3(0.8, 0.65, 0.12), Color(0.25, 0.27, 0.27))
 	_add_item("board", Vector3(-1.35, 1.82, 1.0), Color(0.54, 0.34, 0.19), Vector3(0.75, 0.055, 0.48))
 	_add_item("knife", Vector3(-0.82, 1.85, 1.0), Color(0.72, 0.75, 0.77), Vector3(0.38, 0.035, 0.055))
 	_add_item("pan", Vector3(0.2, 1.55, 1.0), Color(0.18, 0.20, 0.22), Vector3(0.42, 0.08, 0.42))
@@ -354,6 +380,7 @@ func _add_item(item_id: String, pos: Vector3, color: Color, size: Vector3) -> vo
 	body.name = "TemporaryItem_" + item_id
 	body.position = pos
 	body.mass = 0.25
+	body.freeze = true
 	body.set_meta("item_id", item_id)
 	body.collision_layer = 1
 	body.collision_mask = 1
@@ -373,6 +400,29 @@ func _add_item(item_id: String, pos: Vector3, color: Color, size: Vector3) -> vo
 	body.add_child(collision)
 	add_child(body)
 	item_nodes[item_id] = body
+
+func _stock_item_position(item_id: String, index: int) -> Vector3:
+	var lane_x := -4.48
+	match item_id:
+		"carrot": lane_x = -4.10
+		"potato": lane_x = -3.72
+	var row := int(index / 3)
+	var column := index % 3
+	return Vector3(lane_x, 1.05 + float(row) * 0.24, -1.68 + float(column) * 0.24)
+
+func _stock_item_color(item_id: String) -> Color:
+	match item_id:
+		"chicken": return Color(0.78, 0.54, 0.40)
+		"carrot": return Color(0.95, 0.36, 0.08)
+		"potato": return Color(0.63, 0.47, 0.28)
+	return Color.WHITE
+
+func _stock_item_size(item_id: String) -> Vector3:
+	match item_id:
+		"chicken": return Vector3(0.22, 0.13, 0.14)
+		"carrot": return Vector3(0.08, 0.22, 0.08)
+		"potato": return Vector3(0.15, 0.13, 0.14)
+	return Vector3.ONE
 
 func _item_label(item_id: String) -> String:
 	match item_id:
