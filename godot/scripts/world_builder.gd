@@ -478,9 +478,7 @@ func show_cooking_action(action: String) -> void:
 			plate_rim.material_override = _material(Color(0.98, 0.97, 0.93), 0.22)
 			base.add_child(plate_rim)
 		if action == "plate_main":
-			var main_food := Node3D.new()
-			main_food.name = "ActionVisual_plate_main"
-			station.add_child(main_food)
+			var main_food: Node3D = visual
 			var steak := MeshInstance3D.new()
 			steak.name = "SearedChickenFillet"
 			var steak_mesh := CapsuleMesh.new()
@@ -493,16 +491,12 @@ func show_cooking_action(action: String) -> void:
 			steak.material_override = _material(Color(0.48, 0.24, 0.12), 0.48)
 			main_food.add_child(steak)
 		elif action == "plate_side":
-			var side := Node3D.new()
-			side.name = "ActionVisual_plate_side"
-			station.add_child(side)
+			var side: Node3D = visual
 			for i in range(3):
 				var potato := _box(side, "RoastedPotatoWedge_%02d" % i, Vector3(0.12 + float(i) * 0.045, 1.18, -0.16 + float(i) * 0.13), Vector3(0.15, 0.07, 0.075), Color(0.78, 0.62, 0.32), false)
 				potato.rotation.y = -0.25 + float(i) * 0.25
 		elif action == "plate_veg":
-			var vegetables := Node3D.new()
-			vegetables.name = "ActionVisual_plate_veg"
-			station.add_child(vegetables)
+			var vegetables: Node3D = visual
 			for i in range(3):
 				var carrot := _cylinder(vegetables, "GlazedCarrot_%02d" % i, Vector3(-0.16 + float(i) * 0.11, 1.18, 0.18), 0.035, 0.13, Color(0.88, 0.32, 0.07), 12)
 				carrot.rotation.z = PI * 0.5
@@ -510,9 +504,7 @@ func show_cooking_action(action: String) -> void:
 				var broccoli := _cylinder(vegetables, "BroccoliStem_%02d" % i, Vector3(0.18, 1.20, 0.08 + float(i) * 0.10), 0.035, 0.11, Color(0.25, 0.42, 0.16), 10)
 				broccoli.rotation.z = PI * 0.5
 		elif action == "plate_finish":
-			var finish := Node3D.new()
-			finish.name = "ActionVisual_plate_finish"
-			station.add_child(finish)
+			var finish: Node3D = visual
 			var sauce := _cylinder(finish, "SauceSwipe", Vector3(0.02, 1.145, 0.18), 0.045, 0.22, Color(0.55, 0.16, 0.08), 24)
 			sauce.rotation.z = PI * 0.5
 			var herb := _box(finish, "FreshHerbGarnish", Vector3(-0.18, 1.205, 0.02), Vector3(0.10, 0.012, 0.045), Color(0.22, 0.42, 0.16), false)
