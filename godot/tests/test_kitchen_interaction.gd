@@ -56,7 +56,7 @@ func _run_tests() -> void:
 	var plating_station: Node = game.world.get_node("ANIMO_CULINARY_SCHOOL/ANIMO_Workstation_DRESSEREN")
 	var plate_visual: Node = plating_station.get_node("ActionVisual_plate_main")
 	_assert(plate_visual.get_node_or_null("SearedChickenFillet") != null, "Main ingredient is placed in a separate plating action")
-	_assert(plate_visual.get_node_or_null("CeramicPlate") != null, "A ceramic plate is visible under the food")
+	_assert(plating_station.get_node_or_null("ActionVisual_plate_base/CeramicPlate") != null, "A ceramic plate is visible under the food")
 	_assert(plating_station.get_node_or_null("ActionVisual_plate_side/RoastedPotatoWedge_00") != null, "Side dish is added in its own plating action")
 	_assert(plating_station.get_node_or_null("ActionVisual_plate_veg/GlazedCarrot_00") != null, "Vegetables are added in their own plating action")
 	_assert(plating_station.get_node_or_null("ActionVisual_plate_finish/SauceSwipe") != null, "Sauce and garnish are a separate finishing action")
