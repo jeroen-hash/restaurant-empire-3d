@@ -28,8 +28,19 @@ var last_message := "Loop naar een koelkast, diepvries, voorraadrek of werkblad.
 func setup(target_player: CharacterBody3D, player_data: Dictionary, hud_layer: CanvasLayer) -> void:
 	player = target_player
 	inventory = InventoryScript.new(player_data)
+	board_on_counter = bool(player_data.get("kitchen_board_on_counter", false))
+	knife_in_hand = str(player_data.get("kitchen_held_tool", "")) == "chef_knife"
 	_build_kitchen_props()
 	_build_menu(hud_layer)
+	if board_on_counter:
+		_create_board_visual()
+	var held_tool := str(player_data.get("kitchen_held_tool", ""))
+	if held_tool in ["cutting_board", "chef_knife"]:
+		_create_held_tool(held_tool)
+	else:
+		var held_food := inventory.get_held_item()
+		if not held_food.is_empty():
+			_create_held_food(str(held_food.get("id", "")))
 
 func _build_kitchen_props() -> void:
 	# Positions are inside the existing imported ANIMO culinary-school kitchen.
@@ -227,6 +238,7 @@ func interact() -> void:
 			])
 		"place_board":
 			board_on_counter = true
+			GameState.player_data["kitchen_board_on_counter"] = true
 			GameState.player_data["kitchen_held_tool"] = ""
 			_create_board_visual()
 			_clear_held_visual()
