@@ -48,3 +48,24 @@ jobs:
 
       - name: Launch main scene headlessly
         run: godot --headless --path godot --quit-after 10
+
+      - name: Install Godot Web export templates
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz -O export_templates.tpz
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+          unzip -q export_templates.tpz -d "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+
+      - name: Export Web test build
+        run: |
+          mkdir -p dist
+          godot --headless --path godot --export-release "Web" ../dist/index.html
+          test -s dist/index.html
+          find dist -maxdepth 1 -type f -printf '%f %s bytes\\n'
+
+      - name: Upload Web test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: restaurant-empire-3d-web-test
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
