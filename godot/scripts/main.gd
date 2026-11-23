@@ -5,6 +5,7 @@ const PlayerControllerScript = preload("res://scripts/player_controller.gd")
 const EconomyScript = preload("res://scripts/restaurant_economy.gd")
 const EducationScript = preload("res://scripts/education_progression.gd")
 const CookingLessonScript = preload("res://scripts/cooking_lesson.gd")
+const PhysicalKitchenScript = preload("res://scripts/physical_kitchen_v1.gd")
 
 var player: PlayerController
 var economy
@@ -16,6 +17,7 @@ var cooking_label: Label
 var message_label: Label
 var save_label: Label
 var world: WorldBuilder
+var physical_kitchen: PhysicalKitchenV1
 var clock_accumulator := 0.0
 var autosave_accumulator := 0.0
 var interact_button: Button
@@ -51,11 +53,20 @@ func _ready() -> void:
 		float(saved_position.get("z", 5.0))
 	))
 	_build_hud()
+	var school := world.get_node_or_null("ANIMO_CULINARY_SCHOOL")
+	if school != null:
+		physical_kitchen = PhysicalKitchenScript.new()
+		school.add_child(physical_kitchen)
+		physical_kitchen.setup_player(player)
+		physical_kitchen.status_changed.connect(_on_physical_kitchen_status)
 	_refresh_education_ui()
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("interact"):
-		_on_interact_with_kitchen()
+		if physical_kitchen != null and _is_at_culinary_school():
+			physical_kitchen.handle_interaction()
+		else:
+			_on_interact_with_kitchen()
 	if cooking_challenge_active:
 		cooking_challenge_elapsed += delta
 		var phase := fposmod(cooking_challenge_elapsed * 0.9, 1.0)
@@ -257,6 +268,10 @@ func _build_hud() -> void:
 	save_button.text = "SPEL OPSLAAN"
 	save_button.pressed.connect(_save_now)
 	column.add_child(save_button)
+
+func _on_physical_kitchen_status(message: String) -> void:
+	if is_instance_valid(message_label):
+		message_label.text = message
 
 func _on_avatar_selected(avatar_type: String) -> void:
 	if player == null:
