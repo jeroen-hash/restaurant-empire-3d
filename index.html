@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://dl.polyhaven.org">
   <link rel="preconnect" href="https://models.vinish.dev">
-  <link rel="stylesheet" href="./src/style.css?v=rebuild-19">
+  <link rel="stylesheet" href="./src/style.css?v=rebuild-20">
   <script type="importmap">
     {
       "imports": {
@@ -35,6 +35,26 @@
     <div class="status">
       <span class="status-dot"></span><span id="loadStatus">3D-omgeving wordt opgebouwd</span>
     </div>
+    <div class="game-header">
+      <div class="career-chip"><span class="career-dot"></span><span>JOUW CARRIÈRE</span><strong>START</strong></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Open spelmenu">☰ MENU</button>
+    </div>
+    <nav class="game-nav" aria-label="Spelmenu">
+      <button data-panel="restaurant"><span>⌂</span><small>RESTAURANT</small></button>
+      <button data-panel="shop"><span>◇</span><small>WINKEL</small></button>
+      <button data-panel="team"><span>♙</span><small>TEAM</small></button>
+      <button data-panel="finance"><span>€</span><small>FINANCIËN</small></button>
+      <button data-panel="career"><span>✦</span><small>CARRIÈRE</small></button>
+    </nav>
+    <section class="management-panel" id="managementPanel" aria-live="polite" hidden>
+      <div class="panel-heading">
+        <div><div class="panel-kicker">RESTAURANT EMPIRE 3D</div><h2 id="panelTitle">Restaurant</h2></div>
+        <button id="closePanel" class="close-panel" aria-label="Sluiten">×</button>
+      </div>
+      <p id="panelIntro"></p>
+      <div class="panel-options" id="panelOptions"></div>
+      <div class="panel-footnote">Spelonderdelen worden stap voor stap gebouwd. Er worden hier geen niet-bestaande spelgegevens getoond.</div>
+    </section>
     <div class="controls-help" id="controlsHelp">
       <span>LINKS</span> bewegen <i></i><span>RECHTS SLEPEN</span> camera draaien <i></i><span>ACTIE</span> binnen
     </div>
@@ -60,6 +80,6 @@
       <button id="retryBtn">OPNIEUW PROBEREN</button>
     </div>
   </main>
-  <script type="module" src="./src/main.js?v=rebuild-19"></script>
+  <script type="module" src="./src/main.js?v=rebuild-20"></script>
 </body>
 </html>
