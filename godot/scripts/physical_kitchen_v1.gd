@@ -19,7 +19,6 @@ var board_has_ingredient := false
 var chicken_cut := false
 var knife_taken := false
 var hob_area: Area3D
-var pan_area: Area3D
 var plate_area: Area3D
 var pan_on_hob := false
 var chicken_in_pan := false
@@ -67,9 +66,6 @@ func handle_interaction() -> bool:
 			return true
 		if hit.has("collider") and hit.collider == board_area and held_item_id == "knife" and board_has_ingredient and not chicken_cut:
 			_cut_chicken_on_board()
-			return true
-		if hit.has("collider") and hit.collider == hob_area and held_item_id == "":
-			_start_cooking()
 			return true
 		if hit.has("collider") and hit.collider == plate_area and held_item_id == "plate" and chicken_cooked:
 			_serve_to_plate()
@@ -196,7 +192,6 @@ func _place_pan_on_hob() -> void:
 	if pan is RigidBody3D:
 		(pan as RigidBody3D).collision_layer = 0
 		(pan as RigidBody3D).collision_mask = 0
-	pan_area = hob_area
 	held_item = null
 	held_item_id = ""
 	pan_on_hob = true
