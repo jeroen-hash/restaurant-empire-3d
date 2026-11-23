@@ -1,6 +1,7 @@
 extends SceneTree
 
 const EconomyScript = preload("res://scripts/restaurant_economy.gd")
+var failures := 0
 
 func _initialize() -> void:
 	call_deferred("_run_tests")
@@ -30,10 +31,14 @@ func _run_tests() -> void:
 	var blocked = economy.prepare_and_sell("omelet")
 	_assert(not blocked["ok"], "Tweede verkoop moet blokkeren bij onvoldoende voorraad")
 
-	print("ECONOMY TESTS PASSED")
-	quit(0)
+	if failures == 0:
+		print("ECONOMY TESTS PASSED")
+		quit(0)
+	else:
+		push_error("%d ECONOMY TEST(S) FAILED" % failures)
+		quit(1)
 
 func _assert(condition: bool, description: String) -> void:
 	if not condition:
+		failures += 1
 		push_error("TEST FAILED: " + description)
-		quit(1)
