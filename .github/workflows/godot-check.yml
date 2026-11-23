@@ -16,12 +16,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: github-pages
-  cancel-in-progress: true
 
 jobs:
   validate:
@@ -83,19 +77,3 @@ jobs:
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-
-      - name: Upload website for GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/
-
-  deploy:
-    needs: validate
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages-test
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Publish playable web build
-        id: deployment
-        uses: actions/deploy-pages@v4
