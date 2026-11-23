@@ -48,7 +48,11 @@ func _run_tests() -> void:
 	# Visuals must show ingredients in the pan and a composed plated dish.
 	game.world.show_cooking_action("load_pan")
 	var hot_station: Node = game.world.get_node("ANIMO_CULINARY_SCHOOL/ANIMO_Workstation_GAREN")
-	_assert(hot_station.has_node("ActionVisual_load_pan"), "Loaded ingredients are visibly placed in the pan")
+	_assert(hot_station.has_node("ActionVisual_load_pan/ANIMOSteelPan"), "A real pan is visible at the cooking station")
+	_assert(hot_station.has_node("ActionVisual_load_pan/ChickenPiece_00"), "Ingredients appear inside the pan only after loading")
+	game.world.show_cooking_action("prepare")
+	var cutting_station: Node = game.world.get_node("ANIMO_CULINARY_SCHOOL/ANIMO_Workstation_SNIJDEN")
+	_assert(cutting_station.has_node("ActionVisual_prepare/ChefKnifeBlade"), "A chef knife is visible at the cutting board")
 	game.world.show_cooking_action("plate_main")
 	game.world.show_cooking_action("plate_side")
 	game.world.show_cooking_action("plate_veg")
