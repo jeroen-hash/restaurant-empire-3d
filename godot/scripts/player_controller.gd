@@ -326,6 +326,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func set_spawn_position(pos: Vector3) -> void:
 	global_position = pos
+	spawn_safety_position = pos
 
 
 func _build_touch_controls() -> void:
