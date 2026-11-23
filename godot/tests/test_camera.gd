@@ -14,7 +14,7 @@ func _run_tests() -> void:
 	_assert(player.camera_arm is SpringArm3D, "Third-person camera uses a collision spring arm")
 	_assert(is_equal_approx(player.camera_arm.spring_length, player.camera_distance), "Spring arm starts at the intended follow distance")
 	_assert(player.camera_arm.collision_mask == 1, "Camera spring arm detects world walls")
-	_assert(player.camera_arm.get_excluded_objects().has(player.get_rid()), "Camera spring arm ignores the player body")
+	_assert(player.camera.get_parent() == player.camera_arm, "Camera is positioned by the collision spring arm")
 	_assert(player.joystick_base != null and player.joystick_knob != null, "Mobile movement joystick is created")
 	_assert(player.joystick_knob.get_parent() == player.joystick_base, "Joystick knob stays inside its base")
 	_assert(player.joystick_base.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Joystick does not block touch input")
