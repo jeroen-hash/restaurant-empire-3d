@@ -64,18 +64,19 @@ func _process(delta: float) -> void:
 	if player != null:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
-		for action in station_buttons.keys():
-			var action_button: Button = station_buttons[action]
-			if is_instance_valid(action_button):
-				action_button.visible = true
-				action_button.disabled = false
-				if cooking_challenge_active:
-					action_button.text = "STOP"
-				else:
-					var action_station := _get_cooking_station(str(action))
-					var action_distance := float(action_station.get("distance", INF))
-					var short_label := str(action_station.get("button", action)).to_upper()
-					action_button.text = short_label if action_distance > 3.6 else "✓ " + short_label
+		var contextual_button: Button = station_buttons.get("context")
+		if is_instance_valid(contextual_button):
+			if cooking_challenge_active:
+				contextual_button.visible = true
+				contextual_button.disabled = false
+				contextual_button.text = "STOP"
+			else:
+				var next_action := str(cooking_lesson.get_next_action())
+				var action_station := _get_cooking_station(_station_for_stage(next_action))
+				var action_distance := float(action_station.get("distance", INF))
+				contextual_button.visible = action_distance <= 2.8
+				contextual_button.disabled = not contextual_button.visible
+				contextual_button.text = _context_label(next_action)
 
 	# Automatisch bewaren, ook als de speler lang bezig is.
 	autosave_accumulator += delta
@@ -187,37 +188,25 @@ func _build_hud() -> void:
 	exam_button.pressed.connect(_on_take_exam)
 	column.add_child(exam_button)
 
-	# Four large, direct touch controls: the player can choose the exact
-	# kitchen action instead of relying on one easily missed contextual button.
-	var station_action_bar := HBoxContainer.new()
-	station_action_bar.name = "KitchenActionBar"
-	station_action_bar.anchor_left = 0.02
-	station_action_bar.anchor_right = 0.98
-	station_action_bar.anchor_top = 1.0
-	station_action_bar.anchor_bottom = 1.0
-	station_action_bar.offset_top = -74
-	station_action_bar.offset_bottom = -10
-	station_action_bar.add_theme_constant_override("separation", 6)
-	layer.add_child(station_action_bar)
-	var station_actions := [
-		{"action": "prepare", "label": "SNIJDEN"},
-		{"action": "cook", "label": "GAREN"},
-		{"action": "season", "label": "KRUIDEN"},
-		{"action": "plate", "label": "DRESSEREN"}
-	]
-	for index in range(station_actions.size()):
-		var station_data: Dictionary = station_actions[index]
-		var action_button := Button.new()
-		action_button.name = "KitchenInteractButton" if index == 0 else "KitchenAction_" + str(station_data["action"])
-		action_button.text = str(station_data["label"])
-		action_button.custom_minimum_size = Vector2(0, 58)
-		action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		action_button.add_theme_font_size_override("font_size", 13)
-		action_button.pressed.connect(_on_station_button.bind(str(station_data["action"])))
-		station_action_bar.add_child(action_button)
-		station_buttons[str(station_data["action"])] = action_button
-		if index == 0:
-			interact_button = action_button
+	# Eén contextknop rechts op het scherm. Hij verschijnt alleen bij de juiste werkpost.
+	var contextual_button := Button.new()
+	contextual_button.name = "KitchenContextButton"
+	contextual_button.text = "SNIJDEN"
+	contextual_button.anchor_left = 1.0
+	contextual_button.anchor_right = 1.0
+	contextual_button.anchor_top = 0.56
+	contextual_button.anchor_bottom = 0.56
+	contextual_button.offset_left = -178
+	contextual_button.offset_right = -14
+	contextual_button.offset_top = -30
+	contextual_button.offset_bottom = 34
+	contextual_button.custom_minimum_size = Vector2(164, 64)
+	contextual_button.add_theme_font_size_override("font_size", 16)
+	contextual_button.visible = false
+	contextual_button.pressed.connect(_on_context_button_pressed)
+	layer.add_child(contextual_button)
+	station_buttons["context"] = contextual_button
+	interact_button = contextual_button
 	cooking_challenge_hint = Label.new()
 	cooking_challenge_hint.text = "TIMINGOEFENING · STOP BIJ 60–76%"
 	cooking_challenge_hint.visible = false
@@ -285,11 +274,32 @@ func _add_cooking_button(parent: GridContainer, label_text: String, action: Stri
 	parent.add_child(action_button)
 
 const COOKING_STATIONS := [
-	{"action": "prepare", "name": "SNIJ- EN VOORBEREIDINGSPOST", "button": "SNIJDEN", "position": Vector3(-25.0, 0.0, -6.5)},
-	{"action": "cook", "name": "WARME KEUKEN", "button": "GAREN", "position": Vector3(-23.0, 0.0, -6.5)},
-	{"action": "season", "name": "KRUIDEN- EN PROEFPOST", "button": "KRUIDEN & PROEVEN", "position": Vector3(-21.0, 0.0, -6.5)},
-	{"action": "plate", "name": "DRESSAGE & PAS", "button": "DRESSEREN", "position": Vector3(-19.0, 0.0, -6.5)}
+	{"action": "prepare", "name": "SNIJ- EN VOORBEREIDINGSPOST", "button": "SNIJDEN", "position": Vector3(-25.0, 0.0, -6.75)},
+	{"action": "load_pan", "name": "WARME KEUKEN", "button": "INGREDIËNT IN PAN", "position": Vector3(-23.0, 0.0, -6.75)},
+	{"action": "cook", "name": "WARME KEUKEN", "button": "GAREN", "position": Vector3(-23.0, 0.0, -6.75)},
+	{"action": "season", "name": "KRUIDEN- EN PROEFPOST", "button": "KRUIDEN & PROEVEN", "position": Vector3(-21.0, 0.0, -6.75)},
+	{"action": "plate", "name": "DRESSAGE & PAS", "button": "DRESSEREN", "position": Vector3(-19.0, 0.0, -6.75)}
 ]
+
+func _station_for_stage(action: String) -> String:
+	return "cook" if action == "load_pan" else action
+
+func _context_label(action: String) -> String:
+	var labels := {
+		"prepare": "SNIJDEN",
+		"load_pan": "INGREDIËNT IN PAN",
+		"cook": "GAREN",
+		"season": "KRUIDEN",
+		"plate": "DRESSEREN"
+	}
+	return str(labels.get(action, "HANDELEN"))
+
+func _on_context_button_pressed() -> void:
+	if cooking_challenge_active:
+		_finish_cooking_challenge()
+		return
+	var action := str(cooking_lesson.get_next_action())
+	_on_station_button(action)
 
 func _get_nearest_cooking_station(position: Vector3) -> Dictionary:
 	var nearest: Dictionary = {}
@@ -303,8 +313,9 @@ func _get_nearest_cooking_station(position: Vector3) -> Dictionary:
 	return nearest
 
 func _get_cooking_station(action: String) -> Dictionary:
+	var target_action := _station_for_stage(action)
 	for station in COOKING_STATIONS:
-		if str(station["action"]) == action:
+		if str(station["action"]) == target_action:
 			var result: Dictionary = station.duplicate()
 			result["distance"] = player.global_position.distance_to(station["position"]) if player != null else INF
 			return result
@@ -316,10 +327,10 @@ func _on_interact_with_kitchen() -> void:
 	if cooking_challenge_active:
 		_finish_cooking_challenge()
 		return
-	var station := _get_nearest_cooking_station(player.global_position)
-	if station.is_empty():
-		return
-	_on_station_button(str(station["action"]))
+	var action := str(cooking_lesson.get_next_action())
+	var station := _get_cooking_station(_station_for_stage(action))
+	if float(station.get("distance", INF)) <= 2.8:
+		_on_station_button(action)
 
 func _on_station_button(action: String) -> void:
 	if player == null:
@@ -334,6 +345,9 @@ func _on_station_button(action: String) -> void:
 	var next_action := str(cooking_lesson.get_next_action())
 	if action != next_action:
 		message_label.text = "Eerst %s uitvoeren. Ga naar de juiste werkpost." % cooking_lesson.get_next_action_label()
+		return
+	if action == "load_pan":
+		_on_cooking_action("load_pan", 100)
 		return
 	_start_cooking_challenge()
 
