@@ -282,7 +282,7 @@ const COOKING_STATIONS := [
 ]
 
 func _station_for_stage(action: String) -> String:
-	return "cook" if action == "load_pan" else action
+	return "cook" if action == "load_pan" else ("plate" if action.begins_with("plate_") else action)
 
 func _context_label(action: String) -> String:
 	var labels := {
@@ -290,7 +290,10 @@ func _context_label(action: String) -> String:
 		"load_pan": "INGREDIËNT IN PAN",
 		"cook": "GAREN",
 		"season": "KRUIDEN",
-		"plate": "DRESSEREN"
+		"plate_main": "HOOFDINGREDIËNT OP BORD",
+		"plate_side": "BIJGERECHT SCHIKKEN",
+		"plate_veg": "GROENTEN SCHIKKEN",
+		"plate_finish": "SAUS & AFWERKING"
 	}
 	return str(labels.get(action, "HANDELEN"))
 
@@ -348,6 +351,9 @@ func _on_station_button(action: String) -> void:
 		return
 	if action == "load_pan":
 		_on_cooking_action("load_pan", 100)
+		return
+	if action.begins_with("plate_"):
+		_on_cooking_action(action, 100)
 		return
 	_start_cooking_challenge()
 
