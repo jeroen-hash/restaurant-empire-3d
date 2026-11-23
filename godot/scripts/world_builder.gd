@@ -9,6 +9,7 @@ func _ready() -> void:
 	_build_lighting()
 	_build_street()
 	_build_cafe()
+	_build_culinary_school()
 
 func _material(color: Color, roughness := 0.78, metallic := 0.0) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
@@ -130,6 +131,45 @@ func _build_street() -> void:
 			for window_x in [-2.2, 2.2]:
 				_box(building, "WindowRecess", Vector3(window_x, floor_y, 3.05), Vector3(1.45, 1.5, 0.08), Color(0.10, 0.16, 0.17), false)
 				_box(building, "WindowFrame", Vector3(window_x, floor_y, 2.98), Vector3(1.58, 1.63, 0.07), Color(0.16, 0.13, 0.10), false)
+
+
+func _build_culinary_school() -> void:
+	var school := Node3D.new()
+	school.name = "ANIMO_CULINARY_SCHOOL"
+	school.position = Vector3(-22.0, 0.0, -9.0)
+	add_child(school)
+
+	# Open-roof teaching kitchen so the player and the full equipment remain visible.
+	_box(school, "SchoolKitchenFloor", Vector3(0, -0.14, 0), Vector3(12.0, 0.28, 10.2), Color(0.34, 0.36, 0.35))
+	_box(school, "SchoolBackWall", Vector3(0, 1.8, -5.0), Vector3(12.0, 3.6, 0.25), Color(0.68, 0.67, 0.62))
+	_box(school, "SchoolLeftWall", Vector3(-5.9, 1.8, 0), Vector3(0.25, 3.6, 10.0), Color(0.68, 0.67, 0.62))
+	_box(school, "SchoolRightWall", Vector3(5.9, 1.8, 0), Vector3(0.25, 3.6, 10.0), Color(0.68, 0.67, 0.62))
+	_box(school, "SchoolFrontLeft", Vector3(-4.55, 1.8, 5.0), Vector3(2.7, 3.6, 0.25), Color(0.68, 0.67, 0.62))
+	_box(school, "SchoolFrontRight", Vector3(4.55, 1.8, 5.0), Vector3(2.7, 3.6, 0.25), Color(0.68, 0.67, 0.62))
+	_box(school, "SchoolEntranceHeader", Vector3(0, 3.25, 5.0), Vector3(6.4, 0.7, 0.25), Color(0.16, 0.22, 0.19))
+	_box(school, "SchoolSign", Vector3(0, 3.65, 5.18), Vector3(5.5, 0.52, 0.12), Color(0.12, 0.17, 0.15), false)
+	_label(school, "ANIMO CULINARY SCHOOL", Vector3(0, 3.56, 5.10), 0.19, Color(0.91, 0.82, 0.62))
+	_label(school, "PRAKTIJKKEUKEN 01", Vector3(0, 2.95, -4.72), 0.14)
+
+	var kitchen_scene := load("res://assets/environment/working-kitchen-line.glb") as PackedScene
+	if kitchen_scene != null:
+		var kitchen := kitchen_scene.instantiate()
+		kitchen.name = "ANIMO_Professional_Training_Kitchen"
+		kitchen.position = Vector3(0.0, 0.02, -1.9)
+		school.add_child(kitchen)
+	else:
+		push_warning("De 3D-praktijkkeuken kon niet worden geladen.")
+
+	# Training work area, hand-wash point and warm practical lighting.
+	_box(school, "StudentWorkBench", Vector3(0, 0.92, 3.0), Vector3(3.0, 0.12, 0.85), Color(0.62, 0.65, 0.64), false, 0.28)
+	for x in [-1.25, 1.25]:
+		_box(school, "StudentBenchLeg", Vector3(x, 0.44, 3.0), Vector3(0.08, 0.88, 0.08), Color(0.20, 0.22, 0.22), false, 0.32)
+	var school_light := OmniLight3D.new()
+	school_light.position = Vector3(0, 3.1, 0.8)
+	school_light.light_color = Color(1.0, 0.91, 0.78)
+	school_light.light_energy = 1.15
+	school_light.omni_range = 13.0
+	school.add_child(school_light)
 
 func _build_cafe() -> void:
 	var cafe := Node3D.new()
