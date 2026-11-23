@@ -32,6 +32,7 @@ var walk_clock := 0.0
 var _animation_player: AnimationPlayer
 var joystick_base: Panel
 var joystick_knob: Panel
+var joystick_default_position := Vector2.ZERO
 
 func _ready() -> void:
 	name = "Player"
@@ -314,12 +315,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			if event.position.x < get_viewport().get_visible_rect().size.x * 0.50 and active_move_touch == -1:
 				active_move_touch = event.index
 				move_touch_origin = event.position
+				# Dynamic joystick: the player can place their thumb wherever it is comfortable.
+				if is_instance_valid(joystick_base):
+					joystick_base.position = event.position - joystick_base.size * 0.5
+				if is_instance_valid(joystick_knob):
+					joystick_knob.position = Vector2(42, 42)
 			elif active_look_touch == -1:
 				active_look_touch = event.index
 		else:
 			if event.index == active_move_touch:
 				active_move_touch = -1
 				touch_move = Vector2.ZERO
+				if is_instance_valid(joystick_base):
+					joystick_base.position = joystick_default_position
+				if is_instance_valid(joystick_knob):
+					joystick_knob.position = Vector2(42, 42)
 			if event.index == active_look_touch:
 				active_look_touch = -1
 	elif event is InputEventScreenDrag:
@@ -349,6 +359,7 @@ func _build_touch_controls() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	base.position = Vector2(viewport_size.x * 0.23 - 66.0, viewport_size.y * 0.78 - 66.0)
 	base.size = Vector2(132, 132)
+	joystick_default_position = base.position
 	var base_style := StyleBoxFlat.new()
 	base_style.bg_color = Color(0.08, 0.10, 0.09, 0.34)
 	base_style.border_color = Color(0.88, 0.82, 0.68, 0.55)
