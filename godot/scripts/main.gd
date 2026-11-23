@@ -64,16 +64,18 @@ func _process(delta: float) -> void:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
 		if is_instance_valid(interact_button):
+			interact_button.visible = true
 			if cooking_challenge_active:
-				interact_button.visible = true
+				interact_button.disabled = false
 				interact_button.text = "STOP OP HET JUISTE MOMENT"
 			else:
 				var station := _get_nearest_cooking_station(p)
-				interact_button.visible = not station.is_empty() and float(station["distance"]) <= 2.6
-				if interact_button.visible:
+				var in_reach := not station.is_empty() and float(station["distance"]) <= 2.6
+				interact_button.disabled = not in_reach
+				if in_reach:
 					interact_button.text = "WERKPOST · %s" % str(station["button"])
 				else:
-					interact_button.text = "LOOP NAAR DE VOLGENDE WERKPOST"
+					interact_button.text = "LOOP NAAR EEN WERKPOST"
 
 	# Automatisch bewaren, ook als de speler lang bezig is.
 	autosave_accumulator += delta
@@ -186,9 +188,19 @@ func _build_hud() -> void:
 	column.add_child(exam_button)
 
 	interact_button = Button.new()
-	interact_button.text = "LOOP NAAR DE VOLGENDE WERKPOST"
+	interact_button.name = "KitchenInteractButton"
+	interact_button.text = "LOOP NAAR EEN WERKPOST"
+	interact_button.custom_minimum_size = Vector2(260, 56)
+	interact_button.anchor_left = 1.0
+	interact_button.anchor_right = 1.0
+	interact_button.anchor_top = 1.0
+	interact_button.anchor_bottom = 1.0
+	interact_button.offset_left = -278
+	interact_button.offset_right = -14
+	interact_button.offset_top = -82
+	interact_button.offset_bottom = -18
 	interact_button.pressed.connect(_on_interact_with_kitchen)
-	column.add_child(interact_button)
+	layer.add_child(interact_button)
 	cooking_challenge_hint = Label.new()
 	cooking_challenge_hint.text = "TIMINGOEFENING · STOP BIJ 60–76%"
 	cooking_challenge_hint.visible = false
