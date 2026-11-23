@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: godot-web-export-${{ github.ref }}
+  group: godot-web-export-v2-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
