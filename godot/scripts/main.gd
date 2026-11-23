@@ -180,10 +180,9 @@ func _on_cooking_action(action: String) -> void:
 		return
 	var result: Dictionary = cooking_lesson.perform_action(action, education)
 	message_label.text = str(result.get("message", ""))
-	if result.get("complete", false):
-		if int(result.get("level_ups", 0)) > 0:
-			message_label.text += " Niveau gestegen naar %d." % int(result["level"])
-		_refresh_education_ui()
+	if result.get("complete", false) and int(result.get("level_ups", 0)) > 0:
+		message_label.text += " Niveau gestegen naar %d." % int(result["level"])
+	_refresh_education_ui()
 	_save_now()
 
 func _apply_study(study_type: String) -> void:
