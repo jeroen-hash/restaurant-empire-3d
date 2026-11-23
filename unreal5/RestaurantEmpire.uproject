@@ -1,0 +1,13 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "",
+  "Category": "Games",
+  "Description": "RESTAURANT EMPIRE 3D - Unreal Engine 5 vertical slice",
+  "Modules": [
+    {
+      "Name": "RestaurantEmpire",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
+}
