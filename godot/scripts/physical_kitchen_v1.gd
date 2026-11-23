@@ -15,6 +15,7 @@ var held_item_id := ""
 var stock := {"chicken": 4, "carrot": 6, "potato": 6}
 var item_nodes: Dictionary = {}
 var board_area: Area3D
+var board_placed := false
 var board_has_ingredient := false
 var board_ingredient_id := ""
 var prepared_ingredients: Dictionary = {}
@@ -61,13 +62,16 @@ func handle_interaction() -> bool:
 		return false
 	var hit := _camera_hit()
 	if is_instance_valid(held_item):
+		if hit.has("collider") and hit.collider == board_area and held_item_id == "board" and not board_placed:
+			_place_board_on_counter()
+			return true
 		if hit.has("collider") and hit.collider == hob_area and held_item_id == "pan":
 			_place_pan_on_hob()
 			return true
-		if hit.has("collider") and hit.collider == board_area and held_item_id in ["chicken", "carrot", "potato"] and not board_has_ingredient:
+		if hit.has("collider") and hit.collider == board_area and held_item_id in ["chicken", "carrot", "potato"] and board_placed and not board_has_ingredient:
 			_place_ingredient_on_board()
 			return true
-		if hit.has("collider") and hit.collider == board_area and held_item_id == "knife" and board_has_ingredient and not bool(prepared_ingredients.get(board_ingredient_id, false)):
+		if hit.has("collider") and hit.collider == board_area and held_item_id == "knife" and board_placed and board_has_ingredient and not bool(prepared_ingredients.get(board_ingredient_id, false)):
 			_cut_ingredient_on_board()
 			return true
 		if hit.has("collider") and hit.collider == plate_area and held_item_id == "plate" and chicken_cooked:
@@ -91,7 +95,7 @@ func handle_interaction() -> bool:
 	var item_id := str(target.get_meta("item_id", ""))
 	if item_id == "":
 		return false
-	if item_id in ["knife", "pan", "plate"]:
+	if item_id in ["board", "knife", "pan", "plate"]:
 		if item_id == "knife":
 			knife_taken = true
 		_pickup(target, item_id)
@@ -143,6 +147,23 @@ func _drop_held_item() -> void:
 	var dropped_id := held_item_id
 	held_item_id = ""
 	status_changed.emit("%s neergelegd." % _item_label(dropped_id))
+
+func _place_board_on_counter() -> void:
+	if not is_instance_valid(held_item) or held_item_id != "board" or board_placed:
+		return
+	var board := held_item
+	hand_anchor.remove_child(board)
+	board_area.add_child(board)
+	board.transform = Transform3D.IDENTITY
+	board.position = Vector3(0.0, 0.055, 0.0)
+	board.rotation = Vector3.ZERO
+	if board is RigidBody3D:
+		(board as RigidBody3D).collision_layer = 0
+		(board as RigidBody3D).collision_mask = 0
+	held_item = null
+	held_item_id = ""
+	board_placed = true
+	status_changed.emit("Snijplank ligt op het werkblad. Neem nu een ingrediënt uit de koeling.")
 
 func _place_ingredient_on_board() -> void:
 	if not is_instance_valid(held_item) or board_has_ingredient:
@@ -296,10 +317,10 @@ func _build_blockout() -> void:
 	_add_item("carrot", Vector3(-3.75, 1.12, -1.35), Color(0.95, 0.36, 0.08), Vector3(0.08, 0.22, 0.08))
 	_add_item("potato", Vector3(-3.35, 1.12, -1.35), Color(0.63, 0.47, 0.28), Vector3(0.15, 0.13, 0.14))
 	_make_station("Werkblad", Vector3(-2.3, 0.88, 1.8), Vector3(2.2, 0.12, 1.0), Color(0.55, 0.58, 0.58))
-	board_area = _make_station("TemporaryCuttingBoardProxy", Vector3(-2.3, 1.02, 1.8), Vector3(0.75, 0.10, 0.48), Color(0.54, 0.34, 0.19))
-	board_area.set_meta("item_id", "board")
-	_make_station("Messenrek", Vector3(-1.0, 1.45, 1.0), Vector3(0.8, 0.65, 0.12), Color(0.25, 0.27, 0.27))
-	_add_item("knife", Vector3(-1.0, 1.85, 1.0), Color(0.72, 0.75, 0.77), Vector3(0.38, 0.035, 0.055))
+	board_area = _make_station("TemporaryBoardPlacementTarget", Vector3(-2.3, 1.02, 1.8), Vector3(0.75, 0.10, 0.48), Color(0.32, 0.34, 0.34))
+	_make_station("Gereedschapsrek", Vector3(-1.0, 1.45, 1.0), Vector3(0.8, 0.65, 0.12), Color(0.25, 0.27, 0.27))
+	_add_item("board", Vector3(-1.35, 1.82, 1.0), Color(0.54, 0.34, 0.19), Vector3(0.75, 0.055, 0.48))
+	_add_item("knife", Vector3(-0.82, 1.85, 1.0), Color(0.72, 0.75, 0.77), Vector3(0.38, 0.035, 0.055))
 	_add_item("pan", Vector3(0.2, 1.55, 1.0), Color(0.18, 0.20, 0.22), Vector3(0.42, 0.08, 0.42))
 	_add_item("plate", Vector3(0.7, 1.55, 1.0), Color(0.88, 0.87, 0.82), Vector3(0.34, 0.045, 0.34))
 	hob_area = _make_station("TemporaryHobProxy", Vector3(0.5, 1.02, -0.1), Vector3(1.1, 0.12, 0.9), Color(0.16, 0.17, 0.18))
@@ -358,6 +379,7 @@ func _item_label(item_id: String) -> String:
 		"chicken": return "Kip"
 		"carrot": return "Wortel"
 		"potato": return "Aardappel"
+		"board": return "Snijplank"
 		"knife": return "Mes"
 		"pan": return "Pan"
 		"plate": return "Bord"
