@@ -152,6 +152,9 @@ func _on_study_practice() -> void:
 	_apply_study("practice")
 
 func _apply_study(study_type: String) -> void:
+	if not _is_at_culinary_school():
+		message_label.text = "Je moet in de ANIMO Culinary School zijn om les te volgen."
+		return
 	var result: Dictionary = education.study(study_type)
 	message_label.text = str(result.get("message", ""))
 	if int(result.get("level_ups", 0)) > 0:
@@ -160,10 +163,18 @@ func _apply_study(study_type: String) -> void:
 	_save_now()
 
 func _on_take_exam() -> void:
+	if not _is_at_culinary_school():
+		message_label.text = "Je moet naar de ANIMO Culinary School gaan om examen af te leggen."
+		return
 	var result: Dictionary = education.take_exam()
 	message_label.text = str(result.get("message", ""))
 	_refresh_education_ui()
 	_save_now()
+
+func _is_at_culinary_school() -> bool:
+	if player == null:
+		return false
+	return player.global_position.distance_to(Vector3(-22.0, 0.0, -9.0)) <= 9.0
 
 func _refresh_education_ui() -> void:
 	if is_instance_valid(education_label):
