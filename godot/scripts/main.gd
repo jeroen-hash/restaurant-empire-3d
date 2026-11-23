@@ -77,7 +77,11 @@ func _process(delta: float) -> void:
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
 		var contextual_button: Button = station_buttons.get("context")
 		if is_instance_valid(contextual_button):
-			if cooking_challenge_active:
+			if physical_kitchen != null and _is_at_culinary_school():
+				contextual_button.visible = true
+				contextual_button.disabled = false
+				contextual_button.text = "PAK / PLAATS / GEBRUIK"
+			elif cooking_challenge_active:
 				contextual_button.visible = true
 				contextual_button.disabled = false
 				contextual_button.text = "STOP"
@@ -315,6 +319,9 @@ func _context_label(action: String) -> String:
 	return str(labels.get(action, "HANDELEN"))
 
 func _on_context_button_pressed() -> void:
+	if physical_kitchen != null and _is_at_culinary_school():
+		physical_kitchen.handle_interaction()
+		return
 	if cooking_challenge_active:
 		_finish_cooking_challenge()
 		return
