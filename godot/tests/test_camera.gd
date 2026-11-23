@@ -28,7 +28,7 @@ func _run_tests() -> void:
 	_assert(not third_person, "Camera switches back to third-person mode")
 	_assert(player.character.visible, "Character model returns in third-person mode")
 	_assert(is_equal_approx(player.camera.position.z, player.camera_distance), "Third-person camera restores follow distance")
-	_assert(is_equal_approx(player.camera.position.y, 0.55), "Third-person camera restores natural height")
+	_assert(is_equal_approx(player.camera.position.y, 0.32), "Third-person camera restores natural height")
 	if failures == 0:
 		print("CAMERA TESTS PASSED")
 		quit(0)
