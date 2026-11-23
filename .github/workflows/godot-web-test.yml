@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: godot-web-export-v2-${{ github.ref }}
+  group: godot-web-export-v3-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -60,13 +60,15 @@ jobs:
           test -s godot/assets/environment/restaurant-2-top-table-set.glb
           curl -fL --retry 3 https://files.innerscene.com/library/casual-dining-restaurant-interior-60-covers-a1baf64a/c93ee621542c51b8f223/casual-dining-restaurant-interior-60-covers.glb -o godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
           test -s godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
+          npx --yes @gltf-transform/cli dequantize godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb /tmp/casual-dining-restaurant-interior-60-covers.glb
+          mv /tmp/casual-dining-restaurant-interior-60-covers.glb godot/assets/environment/casual-dining-restaurant-interior-60-covers.glb
           curl -fL --retry 3 https://cdn.3dassets.dev/assets/16541/v1/model.glb -o godot/assets/environment/working-kitchen-line.glb
           test -s godot/assets/environment/working-kitchen-line.glb
           npx --yes @gltf-transform/cli dequantize godot/assets/environment/working-kitchen-line.glb /tmp/working-kitchen-line.glb
           mv /tmp/working-kitchen-line.glb godot/assets/environment/working-kitchen-line.glb
 
       - name: Import and parse Godot project
-        run: godot --headless --editor --path godot --quit
+        run: timeout 240s godot --headless --editor --path godot --quit --verbose
 
       - name: Run restaurant economy tests
         run: godot --headless --path godot --script res://tests/test_economy.gd
