@@ -29,7 +29,8 @@ func _run_tests() -> void:
 
 	# Validate the recipe sequence: cutting alone is not enough to start cooking.
 	var data := {"cooking_lesson_stage": 0, "cooking_lesson_quality": 100, "cooking_lessons_completed": 0}
-	var lesson := game.CookingLessonScript.new(data)
+	var lesson_script = load("res://scripts/cooking_lesson.gd")
+	var lesson = lesson_script.new(data)
 	var blocked := lesson.perform_action("cook", game.education, 100)
 	_assert(not bool(blocked.get("ok", false)), "Cooking cannot start before the preparation and pan-loading steps")
 	var prepared := lesson.perform_action("prepare", game.education, 100)
