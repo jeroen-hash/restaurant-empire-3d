@@ -64,12 +64,16 @@ func _process(delta: float) -> void:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
 		if is_instance_valid(interact_button):
-			var station := _get_nearest_cooking_station(p)
-			interact_button.visible = not station.is_empty() and float(station["distance"]) <= 2.6
-			if interact_button.visible:
-				interact_button.text = "WERKPOST · %s" % str(station["button"])
+			if cooking_challenge_active:
+				interact_button.visible = true
+				interact_button.text = "STOP OP HET JUISTE MOMENT"
 			else:
-				interact_button.text = "LOOP NAAR DE VOLGENDE WERKPOST"
+				var station := _get_nearest_cooking_station(p)
+				interact_button.visible = not station.is_empty() and float(station["distance"]) <= 2.6
+				if interact_button.visible:
+					interact_button.text = "WERKPOST · %s" % str(station["button"])
+				else:
+					interact_button.text = "LOOP NAAR DE VOLGENDE WERKPOST"
 
 	# Automatisch bewaren, ook als de speler lang bezig is.
 	autosave_accumulator += delta
@@ -194,8 +198,17 @@ func _build_hud() -> void:
 	cooking_challenge_meter.max_value = 100
 	cooking_challenge_meter.value = 0
 	cooking_challenge_meter.show_percentage = false
-	cooking_challenge_meter.custom_minimum_size = Vector2(220, 16)
+	cooking_challenge_meter.custom_minimum_size = Vector2(220, 20)
 	cooking_challenge_meter.visible = false
+	var timing_zone := ColorRect.new()
+	timing_zone.name = "GoldenTimingZone"
+	timing_zone.color = Color(1.0, 0.72, 0.20, 0.58)
+	timing_zone.anchor_left = 0.60
+	timing_zone.anchor_right = 0.76
+	timing_zone.anchor_top = 0.0
+	timing_zone.anchor_bottom = 1.0
+	timing_zone.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cooking_challenge_meter.add_child(timing_zone)
 	column.add_child(cooking_challenge_meter)
 
 	camera_button = Button.new()
@@ -279,6 +292,8 @@ func _on_interact_with_kitchen() -> void:
 func _start_cooking_challenge() -> void:
 	cooking_challenge_active = true
 	cooking_challenge_elapsed = 0.0
+	if is_instance_valid(player):
+		player.set_physics_process(false)
 	if is_instance_valid(cooking_challenge_meter):
 		cooking_challenge_meter.value = 0
 		cooking_challenge_meter.visible = true
@@ -293,6 +308,8 @@ func _finish_cooking_challenge() -> void:
 	var distance_from_target := absf(phase - 0.68)
 	var execution_quality := clampi(roundi(100.0 - distance_from_target * 190.0), 0, 100)
 	cooking_challenge_active = false
+	if is_instance_valid(player):
+		player.set_physics_process(true)
 	if is_instance_valid(cooking_challenge_meter):
 		cooking_challenge_meter.visible = false
 	if is_instance_valid(cooking_challenge_hint):

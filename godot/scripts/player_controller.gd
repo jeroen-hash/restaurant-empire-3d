@@ -235,11 +235,19 @@ func _find_animation_player(root: Node) -> AnimationPlayer:
 func _play_character_animation(wanted: String) -> void:
 	if _animation_player == null:
 		return
+	var aliases := {
+		"idle": ["idle", "stand", "standing"],
+		"walk": ["walk", "walking"],
+		"run": ["run", "running", "sprint"]
+	}
+	var terms: Array = aliases.get(wanted, [wanted])
 	for animation_name in _animation_player.get_animation_list():
-		if animation_name.to_lower().contains(wanted):
-			if _animation_player.current_animation != animation_name:
-				_animation_player.play(animation_name)
-			return
+		var normalized_name := str(animation_name).to_lower()
+		for term in terms:
+			if normalized_name.contains(str(term)):
+				if _animation_player.current_animation != animation_name:
+					_animation_player.play(animation_name, 0.16)
+				return
 
 func _physics_process(delta: float) -> void:
 	var input_vector := Vector2.ZERO
@@ -273,9 +281,15 @@ func _physics_process(delta: float) -> void:
 	if direction.length() > 0.08:
 		var target_yaw := atan2(-direction.x, -direction.z)
 		character.rotation.y = lerp_angle(character.rotation.y, target_yaw, minf(delta * 11.0, 1.0))
-	_animate_character(delta, Vector2(velocity.x, velocity.z).length())
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	_animate_character(delta, horizontal_speed)
 	if _animation_player != null:
-		_play_character_animation("walk" if Vector2(velocity.x, velocity.z).length() > 0.18 else "idle")
+		if horizontal_speed > move_speed * 0.72:
+			_play_character_animation("run")
+		elif horizontal_speed > 0.18:
+			_play_character_animation("walk")
+		else:
+			_play_character_animation("idle")
 
 	camera_pivot.rotation.y = camera_yaw
 	camera_pivot.rotation.x = camera_pitch
