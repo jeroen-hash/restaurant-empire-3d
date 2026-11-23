@@ -51,7 +51,12 @@ func _process(delta: float) -> void:
 		var p := player.global_position
 		GameState.player_data["position"] = {"x": p.x, "y": p.y, "z": p.z}
 		if is_instance_valid(interact_button):
-			interact_button.visible = p.distance_to(Vector3(-22.0, 0.0, -9.0)) <= 5.5
+			var station := _get_nearest_cooking_station(p)
+			interact_button.visible = not station.is_empty() and float(station["distance"]) <= 2.6
+			if interact_button.visible:
+				interact_button.text = "WERKPOST · %s" % str(station["button"])
+			else:
+				interact_button.text = "LOOP NAAR DE VOLGENDE WERKPOST"
 
 	# Automatisch bewaren, ook als de speler lang bezig is.
 	autosave_accumulator += delta
@@ -150,15 +155,8 @@ func _build_hud() -> void:
 	theory_button.pressed.connect(_on_study_theory)
 	study_row.add_child(theory_button)
 	var cooking_title := Label.new()
-	cooking_title.text = "PRAKTIJKOPDRACHT · VOLG DE JUISTE VOLGORDE"
+	cooking_title.text = "PRAKTIJKKEUKEN · LOOP NAAR DE JUISTE WERKPOST"
 	column.add_child(cooking_title)
-	var cooking_grid := GridContainer.new()
-	cooking_grid.columns = 2
-	column.add_child(cooking_grid)
-	_add_cooking_button(cooking_grid, "SNIJDEN", "prepare")
-	_add_cooking_button(cooking_grid, "GAREN", "cook")
-	_add_cooking_button(cooking_grid, "KRUIDEN", "season")
-	_add_cooking_button(cooking_grid, "DRESSEREN", "plate")
 
 	var exam_button := Button.new()
 	exam_button.text = "EXAMEN AFLEGGEN"
@@ -166,7 +164,7 @@ func _build_hud() -> void:
 	column.add_child(exam_button)
 
 	interact_button = Button.new()
-	interact_button.text = "INTERACTIE · VOLGENDE KOOKSTAP"
+	interact_button.text = "LOOP NAAR DE VOLGENDE WERKPOST"
 	interact_button.pressed.connect(_on_interact_with_kitchen)
 	column.add_child(interact_button)
 
@@ -214,16 +212,34 @@ func _add_cooking_button(parent: GridContainer, label_text: String, action: Stri
 	action_button.pressed.connect(_on_cooking_action.bind(action))
 	parent.add_child(action_button)
 
+const COOKING_STATIONS := [
+	{"action": "prepare", "name": "SNIJ- EN VOORBEREIDINGSPOST", "button": "SNIJDEN", "position": Vector3(-25.0, 0.0, -6.5)},
+	{"action": "cook", "name": "WARME KEUKEN", "button": "GAREN", "position": Vector3(-23.0, 0.0, -6.5)},
+	{"action": "season", "name": "KRUIDEN- EN PROEFPOST", "button": "KRUIDEN & PROEVEN", "position": Vector3(-21.0, 0.0, -6.5)},
+	{"action": "plate", "name": "DRESSAGE & PAS", "button": "DRESSEREN", "position": Vector3(-19.0, 0.0, -6.5)}
+]
+
+func _get_nearest_cooking_station(position: Vector3) -> Dictionary:
+	var nearest: Dictionary = {}
+	var nearest_distance := INF
+	for station in COOKING_STATIONS:
+		var distance: float = position.distance_to(station["position"])
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest = station.duplicate()
+	nearest["distance"] = nearest_distance
+	return nearest
+
 func _on_interact_with_kitchen() -> void:
 	if player == null:
 		return
-	var kitchen_center := Vector3(-22.0, 0.0, -9.0)
-	if player.global_position.distance_to(kitchen_center) > 5.5:
-		message_label.text = "Loop eerst naar een werkpost in de ANIMO Culinary School."
+	var station := _get_nearest_cooking_station(player.global_position)
+	if station.is_empty() or float(station["distance"]) > 2.6:
+		message_label.text = "Ga dichter bij een werkpost staan om ermee te werken."
 		return
 	var next_action := str(cooking_lesson.get_next_action())
-	if next_action == "":
-		message_label.text = "Deze praktijkopdracht is afgerond."
+	if str(station["action"]) != next_action:
+		message_label.text = "Dit is de verkeerde werkpost. Volgende stap: %s." % cooking_lesson.get_next_action_label()
 		return
 	_on_cooking_action(next_action)
 
