@@ -25,6 +25,18 @@ var pan_on_hob := false
 var chicken_in_pan := false
 var chicken_cooked := false
 var plated := false
+var heat_level := 0
+var cooking_active := false
+var cook_elapsed := 0.0
+
+func _process(delta: float) -> void:
+	if cooking_active and not chicken_cooked:
+		cook_elapsed += delta
+		if cook_elapsed >= 5.0:
+			chicken_cooked = true
+			cooking_active = false
+			_set_chicken_cooked_visual()
+			status_changed.emit("Kip is gaar na 5 seconden op warmtestand %d. Neem een bord en richt op de serveerplek." % heat_level)
 
 func _ready() -> void:
 	name = "PhysicalKitchenV1"
@@ -68,6 +80,9 @@ func handle_interaction() -> bool:
 		return true
 	if hit.is_empty():
 		return false
+	if hit.collider == hob_area and chicken_in_pan:
+		_advance_heat()
+		return true
 	if hit.collider == board_area and pan_on_hob and chicken_cut and not chicken_in_pan:
 		_load_chicken_into_pan()
 		return true
@@ -206,16 +221,29 @@ func _load_chicken_into_pan() -> void:
 	chicken_in_pan = true
 	status_changed.emit("Kip zit in de pan. Maak je handen vrij en richt op de kookplaat om te bakken.")
 
-func _start_cooking() -> void:
+func _advance_heat() -> void:
 	if not chicken_in_pan or chicken_cooked:
 		return
-	chicken_cooked = true
+	heat_level = (heat_level % 3) + 1
+	if heat_level == 1:
+		cooking_active = false
+		cook_elapsed = 0.0
+		status_changed.emit("Warmte op stand 1/3 · laag vuur. Tik opnieuw op de kookplaat om hoger te zetten.")
+	elif heat_level == 2:
+		cooking_active = false
+		cook_elapsed = 0.0
+		status_changed.emit("Warmte op stand 2/3 · middelhoog vuur. Tik opnieuw voor hoog vuur.")
+	else:
+		cooking_active = true
+		cook_elapsed = 0.0
+		status_changed.emit("Warmte op stand 3/3 · bakken gestart. 5 seconden kooktijd in deze prototype-test.")
+
+func _set_chicken_cooked_visual() -> void:
 	for child in hob_area.get_children():
 		if child is MeshInstance3D and child.name == "TemporaryChickenInPan":
 			var material := StandardMaterial3D.new()
 			material.albedo_color = Color(0.48, 0.29, 0.17)
 			child.material_override = material
-	status_changed.emit("De kip is gaar in dit prototype. Neem een bord en richt op de serveerplek om te dresseren.")
 
 func _serve_to_plate() -> void:
 	if not chicken_cooked:
