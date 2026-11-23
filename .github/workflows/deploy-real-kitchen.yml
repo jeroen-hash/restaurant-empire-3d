@@ -58,7 +58,7 @@ jobs:
           cd godot-engine
           scons platform=web target=template_release threads=no optimize=size lto=none -j2
           cd ..
-          cp godot-engine/bin/godot.web.template_release.wasm32.zip game/godot/web_release.zip
+          cp godot-engine/bin/godot.web.template_release.wasm32.nothreads.zip game/godot/web_release.zip
           test -s game/godot/web_release.zip
 
       - name: Install Godot 4.5.1 editor and Web export templates
