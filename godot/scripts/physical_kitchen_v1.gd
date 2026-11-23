@@ -40,6 +40,9 @@ func handle_interaction() -> bool:
 		if hit.has("collider") and hit.collider == board_area and held_item_id == "chicken":
 			_place_chicken_on_board()
 			return true
+		if hit.has("collider") and hit.collider == board_area and held_item_id == "knife" and board_has_ingredient and not chicken_cut:
+			_cut_chicken_on_board()
+			return true
 		if hit.has("collider") and str(hit.collider.get_meta("item_id", "")) == "knife":
 			return true
 		_drop_held_item()
@@ -67,6 +70,7 @@ func _camera_hit() -> Dictionary:
 	var origin := player.camera.global_position
 	var end := origin + (-player.camera.global_basis.z * PICKUP_DISTANCE)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
+	query.collide_with_areas = true
 	query.exclude = [player.get_rid()]
 	return get_world_3d().direct_space_state.intersect_ray(query)
 
@@ -119,6 +123,31 @@ func _place_chicken_on_board() -> void:
 	held_item_id = ""
 	board_has_ingredient = true
 	status_changed.emit("Kip ligt op de snijplank. Neem nu het mes van het messenrek.")
+
+func _cut_chicken_on_board() -> void:
+	var original: Node = null
+	for child in board_area.get_children():
+		if child is RigidBody3D and str(child.get_meta("item_id", "")) == "chicken":
+			original = child
+			break
+	if original == null:
+		status_changed.emit("De kip ligt niet meer op de snijplank.")
+		return
+	original.queue_free()
+	# Temporary visible cut pieces; replace with authored food meshes in the art pass.
+	for i in range(5):
+		var piece := MeshInstance3D.new()
+		piece.name = "TemporaryCutChicken_%02d" % i
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(0.075, 0.045, 0.065)
+		piece.mesh = mesh
+		var material := StandardMaterial3D.new()
+		material.albedo_color = Color(0.82, 0.64, 0.52)
+		piece.material_override = material
+		piece.position = Vector3(-0.18 + float(i % 3) * 0.16, 0.10, -0.08 + float(i / 3) * 0.15)
+		board_area.add_child(piece)
+	chicken_cut = true
+	status_changed.emit("Kip is zichtbaar in stukken gesneden. Dit is nog tijdelijke prototype-art.")
 
 func _build_blockout() -> void:
 	# Layout uses the imported professional kitchen as its visual background.
