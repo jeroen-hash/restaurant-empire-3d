@@ -55,7 +55,9 @@ jobs:
               raise SystemExit("Could not find the expected Emscripten memory-growth setting.")
           path.write_text(source.replace(needle, replacement, 1))
           PY
+          cd godot-engine
           scons platform=web target=template_release threads=no optimize=size lto=none -j2
+          cd ..
           cp godot-engine/bin/godot.web.template_release.wasm32.zip game/godot/web_release.zip
           test -s game/godot/web_release.zip
 
