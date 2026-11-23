@@ -202,19 +202,37 @@ func _build_cafe() -> void:
 		_cylinder(cafe, "Bottle_%02d" % i, Vector3(x, 2.82, -4.55), 0.085, 0.42, Color(0.20, 0.34, 0.25) if i % 2 == 0 else Color(0.48, 0.28, 0.13), 12)
 		_cylinder(cafe, "BottleNeck_%02d" % i, Vector3(x, 3.07, -4.55), 0.035, 0.12, Color(0.20, 0.34, 0.25), 12)
 
-	# Four dining tables with chairs and tabletop details.
-	for row in range(2):
-		for col in range(2):
-			var x := -3.2 + float(col) * 6.4
-			var z := 0.0 + float(row) * 2.45
-			_cylinder(cafe, "TablePedestal", Vector3(x, 0.57, z), 0.10, 1.0, Color(0.12, 0.12, 0.11), 16)
-			_box(cafe, "TableTop", Vector3(x, 1.08, z), Vector3(1.65, 0.12, 0.95), wood_light, false)
-			for cx in [-0.55, 0.55]:
-				_cylinder(cafe, "ChairLeg", Vector3(x + cx, 0.30, z + 0.78), 0.035, 0.58, wood, 10)
-				_box(cafe, "ChairSeat", Vector3(x + cx, 0.60, z + 0.78), Vector3(0.52, 0.10, 0.48), wood_light, false)
-				_box(cafe, "ChairBack", Vector3(x + cx, 0.94, z + 0.98), Vector3(0.52, 0.62, 0.09), wood, false)
-			_cylinder(cafe, "TableCandle", Vector3(x, 1.23, z), 0.045, 0.16, brass, 12)
-			_sphere(cafe, "CandleFlame", Vector3(x, 1.34, z), 0.035, Color(1.0, 0.72, 0.32))
+	# Real-world CC0 furniture models are used where available. Keep collision
+	# geometry simple and separate from the visual GLB assets for mobile performance.
+	var table_scene := load("res://assets/environment/restaurant-2-top-table-set.glb") as PackedScene
+	if table_scene != null:
+		for row in range(2):
+			for col in range(2):
+				var table_set := table_scene.instantiate()
+				table_set.name = "ANIMO_TableSet_%02d_%02d" % [row, col]
+				table_set.position = Vector3(-3.0 + float(col) * 6.0, 0.27, -0.2 + float(row) * 2.5)
+				table_set.scale = Vector3.ONE * 0.92
+				cafe.add_child(table_set)
+	else:
+		# Lightweight fallback while the licensed GLB is unavailable.
+		for row in range(2):
+			for col in range(2):
+				var x := -3.2 + float(col) * 6.4
+				var z := 0.0 + float(row) * 2.45
+				_cylinder(cafe, "TablePedestal", Vector3(x, 0.57, z), 0.10, 1.0, Color(0.12, 0.12, 0.11), 16)
+				_box(cafe, "TableTop", Vector3(x, 1.08, z), Vector3(1.65, 0.12, 0.95), wood_light, false)
+				for cx in [-0.55, 0.55]:
+					_cylinder(cafe, "ChairLeg", Vector3(x + cx, 0.30, z + 0.78), 0.035, 0.58, wood, 10)
+					_box(cafe, "ChairSeat", Vector3(x + cx, 0.60, z + 0.78), Vector3(0.52, 0.10, 0.48), wood_light, false)
+					_box(cafe, "ChairBack", Vector3(x + cx, 0.94, z + 0.98), Vector3(0.52, 0.62, 0.09), wood, false)
+
+	var service_scene := load("res://assets/environment/restaurant-service-station.glb") as PackedScene
+	if service_scene != null:
+		var service_station := service_scene.instantiate()
+		service_station.name = "ANIMO_ServiceStation_3D"
+		service_station.position = Vector3(4.25, 0.27, -3.2)
+		service_station.scale = Vector3.ONE * 0.88
+		cafe.add_child(service_station)
 
 	# Ceiling pendants with warm light pools.
 	for x in [-3.0, 0.0, 3.0]:
