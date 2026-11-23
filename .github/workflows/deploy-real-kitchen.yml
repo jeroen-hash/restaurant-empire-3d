@@ -1,6 +1,5 @@
 name: Publish real-kitchen test build
-# Rebuild the mobile-optimized Web export from rebuild/real-kitchen-v1.
-
+# Build a Safari-focused Godot Web template with a bounded WASM heap.
 on:
   push:
     branches:
@@ -29,27 +28,58 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: rebuild/real-kitchen-v1
+          path: game
 
-      - name: Install Godot 4.5.1
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config
+          python3 -m pip install --user scons==4.8.1 --break-system-packages
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.9
+          actions-cache-folder: emsdk-cache
+
+      - name: Build Safari-focused Godot 4.5.1 Web template
+        run: |
+          git clone --depth 1 --branch 4.5.1-stable https://github.com/godotengine/godot.git godot-engine
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("godot-engine/platform/web/detect.py")
+          source = path.read_text()
+          needle = 'env.Append(LINKFLAGS=["-sALLOW_MEMORY_GROWTH=1"])'
+          replacement = needle + '\n    # Keep WebAssembly linear memory within a mobile Safari-friendly ceiling.\n    env.Append(LINKFLAGS=["-sMAXIMUM_MEMORY=512MB"])'
+          if needle not in source:
+              raise SystemExit("Could not find the expected Emscripten memory-growth setting.")
+          path.write_text(source.replace(needle, replacement, 1))
+          PY
+          scons platform=web target=template_release threads=no optimize=size lto=none -j2
+          cp godot-engine/bin/godot.web.template_release.wasm32.zip game/godot/web_release.zip
+          test -s game/godot/web_release.zip
+
+      - name: Install Godot 4.5.1 editor and Web export templates
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_linux.x86_64.zip -O godot.zip
           unzip -q godot.zip -d godot-bin
           chmod +x godot-bin/Godot_v4.5.1-stable_linux.x86_64
           sudo mv godot-bin/Godot_v4.5.1-stable_linux.x86_64 /usr/local/bin/godot
-
-      - name: Install Godot Web export templates
-        run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_export_templates.tpz -O export_templates.tpz
           mkdir -p "$RUNNER_TEMP/godot-export-templates" "$HOME/.local/share/godot/export_templates/4.5.1.stable"
           unzip -q export_templates.tpz -d "$RUNNER_TEMP/godot-export-templates"
           cp -a "$RUNNER_TEMP/godot-export-templates/templates/." "$HOME/.local/share/godot/export_templates/4.5.1.stable/"
 
-      - name: Export the real kitchen game to Web
+      - name: Export with the bounded-memory Web template
+        working-directory: game
         run: |
+          sed -i "s|^custom_template/release=.*|custom_template/release=\"$GITHUB_WORKSPACE/game/godot/web_release.zip\"|" godot/export_presets.cfg
           mkdir -p dist
           godot --headless --editor --path godot --quit
           godot --headless --path godot --export-release "Web" ../dist/index.html
           test -s dist/index.html
+          test -s dist/index.wasm
+          test -s dist/index.pck
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -57,7 +87,7 @@ jobs:
       - name: Upload website for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/
+          path: game/dist/
 
       - name: Publish playable web build
         id: deployment
